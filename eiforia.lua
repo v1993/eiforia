@@ -632,6 +632,7 @@ torgovla = room {
 
 prewar = yesnoroom {
 	nam = "Война";
+	pic = "gfx/war.png";
 	question = "Есть возможность объявить войну одному из соседей. Объявляете?";
 	yes = code [[return walk "war1";]];
 	no = code [[nextstep();]];
@@ -644,6 +645,7 @@ war1 = yesnoroom {
 		ras = round(enemy_men-(50*enemy_men/100)+rnd(enemy_men));
 	end;
 	nam = "Война";
+	pic = "gfx/war.png";
 	question = function(s)
 		if fl_mar_war == 1 then
 			pn "Разозленный отказом жениться на его дочке, соседний король начал ВОЙНУ!";
@@ -663,6 +665,7 @@ war1 = yesnoroom {
 
 war12 = cutscene {
 	nam = "Информация";
+	pic = "gfx/war.png";
 	dsc = function(s)
 		local str = (sklon3(mobil, "Мобилизован ", "Мобилизовано ")..mobil.." "..mannam(mobil)..".^В народе растет недовольство!");
 		for c in str:gmatch"." do
@@ -720,6 +723,7 @@ end;
 
 war2 = war2const {
 	nam = "Война";
+	pic = "gfx/war.png";
 	question = function(s)
 		pn "Есть возможность завербовать наемников на время этой войны.";
 		p "Один наемник стоит 100 рублей. Будете вербовать?"
@@ -747,6 +751,7 @@ warenter = checkinput(
 
 war3 = enterroom {
 	nam = "Война";
+	pic = "gfx/war.png";
 	enter = code [[hook_enter()]];
 	exit = code [[unhook_enter()]];
 	dsc = function(s)
@@ -782,8 +787,9 @@ war3 = enterroom {
 	end;
 };
 
-warvictory = xenterroom  {
+warvictory = xenterroom {
 	nam = code [[return (andale:txt ("Победа!!!", 'green', 5));]];
+	pic = "gfx/war.png";
 	exit = code [[fl_mar_war=0]];
 	dsc = function(s)
 		p (andale:txt ("Вы победили!", 'green'));
@@ -797,6 +803,7 @@ warvictory = xenterroom  {
 
 warloss = xenterroom {
 	nam = code [[return (andale:txt ("Поражение...", 'red', 5));]];
+	pic = "gfx/war.png";
 	exit = function(s)
 		if fl_mar_war == 1 then
 			fl_mar_war = 0;

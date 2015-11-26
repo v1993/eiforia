@@ -306,7 +306,7 @@ end;
 nextstep_xact = xact('nextstep_xact', code [[return nextstep()]]);
 
 deftable = function(mo, go, la, ze, kr, gu, firl, secl, startprint, endprint, hat, typeprint)
-	if mo == nil and go == nil and la == nil and ze == nil and kr == nil and gu == nil and hat == nil then
+	if mo == nil and go == nil and la == nil and ze == nil and kr == nil and gu == nil then
 		return true
 	end
 	if startprint then
@@ -318,49 +318,48 @@ deftable = function(mo, go, la, ze, kr, gu, firl, secl, startprint, endprint, ha
 		p (firl or 'Название');
 		p (txttab '35%');
 		p (secl or 'Запасы');
-		p "^"
 	end;
 	if mo ~= nil then
+		p "^"
 		p (txttab '0%');
 		p (typeprint and 'Деньги, рублей' or 'Деньги');
 		p (txttab '35%');
 		p (mo);
-		p "^";
 	end;
 	if go ~= nil then
+		p "^"
 		p (txttab '0%');
 		p (typeprint and 'Золото, кг' or 'Золото');
 		p (txttab '35%');
 		p (go);
-		p "^";
 	end;
 	if la ~= nil then
+		p "^"
 		p (txttab '0%');
 		p (typeprint and 'Земля, га' or 'Земля');
 		p (txttab '35%');
 		p (la);
-		p "^";
 	end;
 	if ze ~= nil then
+		p "^"
 		p (txttab '0%');
 		p (typeprint and 'Зерно, тонн' or 'Зерно');
 		p (txttab '35%');
 		p (ze);
-		p "^";
 	end;
 	if kr ~= nil then
+		p "^"
 		p (txttab '0%');
 		p (typeprint and 'Крестьяне, душ' or 'Крестьяне');
 		p (txttab '35%');
 		p (kr);
-		p "^";
 	end;
 	if gu ~= nil then
+		p "^"
 		p (txttab '0%');
 		p (typeprint and 'Гвардия, человек' or 'Гвардия');
 		p (txttab '35%');
 		p (gu);
-		p "^"
 	end;
 	if endprint then
 		p "^";
@@ -371,7 +370,11 @@ moneytable = function(extramode, startprint)
 		p "^";
 	end;
 	if not extramode then
-		return deftable(cur_money, cur_gold, cur_land, cur_zerno, cur_krest, cur_guard);
+		if deftable(cur_money, cur_gold, cur_land, cur_zerno, cur_krest, cur_guard) ~= nil then
+			return (deftable(cur_money, cur_gold, cur_land, cur_zerno, cur_krest, cur_guard).."^");
+		else
+			return "^";
+		end;
 	else
 		p (txttab '0%');
 		p 'Название';
@@ -789,13 +792,13 @@ war3 = enterroom {
 
 warvictory = xenterroom {
 	nam = code [[return (andale:txt ("Победа!!!", 'green', 5));]];
-	pic = "gfx/war.png";
+	pic = "gfx/warvictory.png";
 	exit = code [[fl_mar_war=0]];
 	dsc = function(s)
 		p (andale:txt ("Вы победили!", 'green'));
-		pn "Ваша армия захватила трофеи:";
-		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, nil, nil, nil, nil, nil, false);
-		p "^^";
+		p "Ваша армия захватила трофеи:";
+		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, nil, nil, nil, nil, false, false);
+--		p "^^";
 	end;
 	xdsc = nextbutton;
 	press = code [[return nextstep()]];
@@ -803,7 +806,7 @@ warvictory = xenterroom {
 
 warloss = xenterroom {
 	nam = code [[return (andale:txt ("Поражение...", 'red', 5));]];
-	pic = "gfx/war.png";
+	pic = "gfx/warloss.png";
 	exit = function(s)
 		if fl_mar_war == 1 then
 			fl_mar_war = 0;
@@ -813,9 +816,9 @@ warloss = xenterroom {
 	end;
 	dsc = function(s)
 		p (andale:txt ("Вы проиграли...", 'red'));
-		pn " Ваши потери в этой войне:";
-		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, ch_guard, nil, nil, nil, nil, false);
-		p "^^";
+		p " Ваши потери в этой войне:";
+		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, ch_guard, nil, nil, nil, false, false);
+--		p "^^";
 	end;
 	xdsc = nextbutton;
 	press = code [[nextstep()]];
@@ -1070,7 +1073,7 @@ svadba = yesnoroom {
 	question = function(s)
 		pn "Соседний король сватает за Вас свою дочку.";
 		pn "В приданое он предлагает:";
-		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, ch_guard, nil, "Количество", false, nil, false);
+		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, ch_guard, nil, "Количество", false, true, false);
 		p "Вы согласны?"
 	end;
 	yes = function(s)
@@ -1138,7 +1141,7 @@ nasledstvo = xenterroom {
 	dsc = function(s)
 		p "Умер Ваш дальний родственник. Вы получили наследство в размере:";
 		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, ch_guard, nil, "Количество", true, true, false);
-		p "^^";
+--		p "^^";
 	end;
 	press = code [[return nextstep();]];
 	xdsc = nextbutton;
@@ -1732,6 +1735,7 @@ gameend = xenterroom {
 		pn (god);
 		pn (times:txt ("За ваше состояние Вам даётся следующее количество очков:", nil, 3));
 		deftable(make_ochki());
+		p "^";
 		p (txttab '0%');
 		p 'Храмы';
 		p (txttab '35%');

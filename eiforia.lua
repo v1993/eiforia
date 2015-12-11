@@ -1616,7 +1616,7 @@ newyear1 = cutscene {
 
 yeartoyear = cutscene {
 	nam = "Прошёл год";
-	enter = function(s) s.kbduse = false; eat_rat=1000; kar_pribil=100; grab_money=100; grab_gold=1; hook_enter(); end;
+	enter = function(s) s.kbduse = false; hook_enter(); end;
 	exit = function(s) s.kbduse = false; unhook_enter(); end;
 	var {kbduse = false};
 	kbd = function(s, down, key)

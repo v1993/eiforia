@@ -875,6 +875,7 @@ end;
 
 snaradkar = snaradkarconst {
 	nam = "Снаряжение каравана";
+	pic = "gfx/snaradkar.png";
 	question = function(s)
 		p "Заморский купец предлагает снарядить караван. Вы согласны?";
 	end;
@@ -906,6 +907,7 @@ snaradkarenter = moneyinput(
 
 snaradkar1 = cutscene {
 	nam = "В пустыню...";
+	pic = "gfx/kar.png";
 	dsc = function(s)
 		local str = "Караван отправился за тридевять земель...";
 		for c in str:gmatch"." do
@@ -1614,7 +1616,7 @@ newyear1 = cutscene {
 
 yeartoyear = cutscene {
 	nam = "Прошёл год";
-	enter = function(s) s.kbduse = false; hook_enter(); end;
+	enter = function(s) s.kbduse = false; eat_rat=1000; kar_pribil=100; grab_money=100; grab_gold=1; hook_enter(); end;
 	exit = function(s) s.kbduse = false; unhook_enter(); end;
 	var {kbduse = false};
 	kbd = function(s, down, key)
@@ -1625,8 +1627,8 @@ yeartoyear = cutscene {
 		end;
 	end;
 	dsc = function(s)
-		pn "Прошёл год...{fading}{pause 1500}^Ваше Величество, прибыл Главный Визирь с докладом.{fading}{pause 1000}^Визирь сообщает:{fading}{pause 1000}";
-		pn ("Жалованье гвардии за прошлый год составило "..abs_sod_guard.." "..rubnam(abs_sod_guard)..".{fading}{pause 1000}");
+		pn "Прошёл год...{pic gfx/visir.png}{fading}{pause 1500}^Ваше Величество, прибыл Главный Визирь с докладом.{fading}{pause 1000}^Визирь сообщает:{fading}{pause 1000}";
+		pn ("Жалованье гвардии за прошлый год составило "..abs_sod_guard.." "..rubnam(abs_sod_guard)..".{pic gfx/money2.png}{fading}{pause 1000}");
 		if fl_urog == 0 then
 			pn "Страшная засуха поразила посевы. Очень неурожайный год."
 			pn ("Собрано всего "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
@@ -1641,31 +1643,30 @@ yeartoyear = cutscene {
 			pn "Пролившиеся вовремя дожди обеспечили невиданно высокий урожай.";
 			pn ("Амбары ломятся от зерна - собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." !");
 		end;
-		pr "{fading}{pause 1500}"
+		pr "{pic gfx/zerno2.png}{fading}{pause 2000}"
 		if eat_rat > 0 then
-			pn ("Преступная халатность! Крысы сожрали "..eat_rat.." "..sklon2(eat_rat, "тонна", "тонны", "тонн").." зерна!{fading}{pause 1000}");
+			pn ("Преступная халатность! Крысы сожрали "..eat_rat.." "..sklon2(eat_rat, "тонна", "тонны", "тонн").." зерна!{pic gfx/rats.png}{fading}{pause 2000}");
 		end;
 		if add_krest > 0 then
-			pn ("Число Ваших подданных увеличилось. "..sklon3(add_krest, "Родился", "Родилось").." "..add_krest.." "..sklon2(add_krest, "ребёнок", "ребёнка", "детей")..".{fading}{pause 1000}");
+			pn ("Число Ваших подданных увеличилось. "..sklon3(add_krest, "Родился", "Родилось").." "..add_krest.." "..sklon2(add_krest, "ребёнок", "ребёнка", "детей")..".{pic gfx/child.png}{fading}{pause 2000}");
 		end;
 		if run_krest > 0 then
-			pn ("Вашим крестьянам не хватает земли. "..sklon3(run_krest, "Сбежал", "Сбежало").." "..run_krest.." "..mannam(run_krest)..".{fading}{pause 1000}");
+			pn ("Вашим крестьянам не хватает земли. "..sklon3(run_krest, "Сбежал", "Сбежало").." "..run_krest.." "..mannam(run_krest)..".{fading}{pause 2000}{pic gfx/run_krest.png}");
 		end;
 		if run_guard > 0 then
 			pn "Не хватило денег на выплату денежного довольствия Вашей гвардии.";
-			pn (sklon3(run_guard, "Дезертировал", "Дезертировало").." "..run_guard.." "..sklon(run_guard, "солдат", "солдата")..".{fading}{pause 1000}");
+			pn (sklon3(run_guard, "Дезертировал", "Дезертировало").." "..run_guard.." "..sklon(run_guard, "солдат", "солдата")..".{pic gfx/run_guard.png}{fading}{pause 2000}");
 		end;
 		if grab_gold > 0 then
-			pn ("Скандал! Из сокровищницы "..sklon3(grab_gold, "похищен", "похищено").." "..grab_gold.." "..sklon2(grab_gold, "килограмм", "килограмма", "килограммов").." золота.{fading}{pause 1000}");
+			pn ("Скандал! Из сокровищницы "..sklon3(grab_gold, "похищен", "похищено").." "..grab_gold.." "..sklon2(grab_gold, "килограмм", "килограмма", "килограммов").." золота.{pic gfx/grab_gold.png}{fading}{pause 2000}");
 		end;
 		if grab_money > 0 then
-			pn ("Кража! Визирь похитил "..grab_money.." "..rubnam(grab_money).." и скрылся!{fading}{pause 1000}");
+			pn ("Кража! Визирь похитил "..grab_money.." "..rubnam(grab_money).." и скрылся!{pic gfx/visir_deneg.png}{fading}{pause 2000}");
 		end;
 		if kar_pribil > 0 then
-			pn ("Вернулся Ваш караван! Получено прибыли на сумму "..kar_pribil.." "..rubnam(kar_pribil).."!{fading}{pause 1000}")
+			pn ("Вернулся Ваш караван! Получено прибыли на сумму "..kar_pribil.." "..rubnam(kar_pribil).."!{pic gfx/pribil_kar.png}{fading}{pause 2000}")
 		end;
 		pr ("{code yeartoyear.kbduse=true}{cut "..enterimg.."}{walk tmproom}");
-
 	end;
 };
 

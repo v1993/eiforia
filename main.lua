@@ -1,5 +1,5 @@
 -- $Name: Королевство Эйфория$
--- $Version: 0.1$
+-- $Version: 0.1.1$
 -- $Author: Очинский Валерий$
 instead_version "2.1.0"
 game.forcedsc = true;

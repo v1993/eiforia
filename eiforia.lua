@@ -62,7 +62,7 @@ make_ochki = function(t)
 	end;
 end;
 
--- Спец. функция обработки шагов (пока пуста)
+-- Спец. функция обработки шагов
 
 nextstep = function()
 	local chtype = 0; retry = false;
@@ -267,6 +267,14 @@ end
 rubnam = function(num)
 	return sklon2(num, "рубль", "рубля", "рублей");
 end
+sodnam = function(num)
+	return sklon(num, "солдат", "солдата")
+end
+
+krestnam = function(num)
+	return sklon2(num, "крестьянин", "крестьянина", "крестьян");
+end
+
 -- 1.2
 sklon = function(num, t1, t2)
 	local num1=tonumber(string.sub(tostring(num), -1));
@@ -644,8 +652,13 @@ prewar = yesnoroom {
 war1 = yesnoroom {
 	enter = function(s)
 		hook_all();
-		your_men = cur_guard ; enemy_men=round(rnd((cur_guard+cur_krest)*2));
-		ras = round(enemy_men-(50*enemy_men/100)+rnd(enemy_men));
+		your_men_krest = 0;
+		your_men_extra = 0;
+		your_men_guard = cur_guard;
+		enemy_men_guard = round(rnd(cur_guard*2));
+		enemy_men_krest = round(rnd(cur_krest*2));
+		ras_guard = round(enemy_men_guard - (50 * enemy_men_guard / 100) + rnd(enemy_men_guard));
+		ras_krest = round(enemy_men_krest - (35 * enemy_men_krest / 100) + rnd(enemy_men_krest));
 	end;
 	nam = "Война";
 	pic = "gfx/war.png";
@@ -655,12 +668,11 @@ war1 = yesnoroom {
 		elseif fl_mal_war == 1 then
 			pn "Соседние короли, видя малочисленность Ваших войск, объявили Вам ВОЙНУ!";
 		end;
-		pn ("Разведка доносит о предполагаемой численности войск врага: "..ras.." "..mannam(ras)..".");
-		p ("Ваши силы: "..your_men.." "..mannam(your_men)..". Объявляете мобилизацию крестьян?");
+		pn ("Разведка доносит о предполагаемой численности войск врага: "..ras_guard.." "..sodnam(ras_guard).." и "..ras_krest.." "..krestnam(ras_krest)..".");
+		p ("Ваши силы: "..your_men_guard.." "..sodnam(ras_guard)..". Объявляете мобилизацию крестьян?");
 	end;
 	yes = function(s)
-		mobil=round((rnd(50)+50)*cur_krest/100);
-		your_men = your_men+mobil;
+		your_men_krest = round((rnd(50)+50)*cur_krest/100);
 		walk "war12";
 	end;
 	no = code [[walk(war2);]];
@@ -670,7 +682,7 @@ war12 = cutscene {
 	nam = "Информация";
 	pic = "gfx/war.png";
 	dsc = function(s)
-		local str = (sklon3(mobil, "Мобилизован ", "Мобилизовано ")..mobil.." "..mannam(mobil)..".^В народе растет недовольство!");
+		local str = (sklon3(your_men_krest, "Мобилизован ", "Мобилизовано ")..your_men_krest.." "..mannam(your_men_krest)..".^В народе растет недовольство!");
 		for c in str:gmatch"." do
 			pr (c.."{fading 1}");
 		end;
@@ -742,7 +754,7 @@ war2 = war2const {
 warenter = checkinput(
 	function(s, text)
 		cur_money = cur_money-(tonumber(text)*100);
-		your_men = your_men+tonumber(text);
+		your_men_extra = tonumber(text);
 		objs():del(s);
 		walk(war3);
 	end,
@@ -758,16 +770,28 @@ war3 = enterroom {
 	enter = code [[hook_enter()]];
 	exit = code [[unhook_enter()]];
 	dsc = function(s)
-		pn ("Перед битвой выяснилось точное число войск противника: "..enemy_men.." "..mannam(enemy_men)..".");
-		pn ("Ваши войска составляют "..your_men.." "..sklon(your_men, "солдат", "солдата")..".");
+		pn ("Перед битвой выяснилось точное число войск противника: "..enemy_men_guard.." "..sodnam(enemy_men_guard).." и "..enemy_men_krest.." "..krestnam(enemy_men_krest)..".");
+		pr ("Ваши войска составляют "..your_men_guard.." "..sodnam(your_men_guard));
+		if your_men_krest > 0 and your_men_extra > 0 then
+			pr (", "..your_men_krest.." "..krestnam(your_men_krest).." и "..your_men_extra.." "..sklon2(your_men_extra, "наёмник", "наёмника", "наёмников"));
+		elseif your_men_krest > 0 then
+			pr (" и "..your_men_krest.." "..krestnam(your_men_krest));
+		elseif your_men_extra > 0 then
+			pr (" и "..your_men_extra.." "..sklon2(your_men_extra, "наёмник", "наёмника", "наёмников"));
+		end;
+		pn "."
 		p ("Нажмите "..make_enter("warpress").." для начала сражения...");
 	end;
 	obj = {xact('warpress', code [[return stead.call(here(), 'press')]])};
 	press = function(s)
 		local victory=false;
 		local n;
-		n=rnd(enemy_men+your_men*2);
-		if (n<=your_men*2) then
+		local your_mark;
+		local enemy_mark;
+		your_mark = round(your_men_guard*rndfr(7, 8, 5)+your_men_extra*rndfr(5, 8, 5)+your_men_krest*rndfr(2, 4, 5));
+		enemy_mark = round(enemy_men_guard*rndfr(7, 8, 5)+enemy_men_krest*rndfr(2, 4, 5));
+		n=rnd(enemy_mark+your_mark*2);
+		if (n<=your_mark*2) then
 			victory=true;
 		end;
 		click();
@@ -793,7 +817,13 @@ war3 = enterroom {
 warvictory = xenterroom {
 	nam = code [[return (andale:txt ("Победа!!!", 'green', 5));]];
 	pic = "gfx/warvictory.png";
-	exit = code [[fl_mar_war=0]];
+	exit = function(s)
+		if fl_mar_war == 1 then
+			fl_mar_war = 0;
+		elseif fl_mal_war == 1 then
+			fl_mal_war = 0;
+		end;
+	end;
 	dsc = function(s)
 		p (andale:txt ("Вы победили!", 'green'));
 		p "Ваша армия захватила трофеи:";
@@ -1655,7 +1685,7 @@ yeartoyear = cutscene {
 		end;
 		if run_guard > 0 then
 			pn "Не хватило денег на выплату денежного довольствия Вашей гвардии.";
-			pn (sklon3(run_guard, "Дезертировал", "Дезертировало").." "..run_guard.." "..sklon(run_guard, "солдат", "солдата")..".{pic gfx/run_guard.png}{fading}{pause 2000}");
+			pn (sklon3(run_guard, "Дезертировал", "Дезертировало").." "..run_guard.." "..sodnam(run_guard)..".{pic gfx/run_guard.png}{fading}{pause 2000}");
 		end;
 		if grab_gold > 0 then
 			pn ("Скандал! Из сокровищницы "..sklon3(grab_gold, "похищен", "похищено").." "..grab_gold.." "..sklon2(grab_gold, "килограмм", "килограмма", "килограммов").." золота.{pic gfx/grab_gold.png}{fading}{pause 2000}");
@@ -1837,10 +1867,14 @@ eiforia = obj {
 		god=1;
 		-- Доп. переменные, юзаются где попало
 		-- Война и не только
-		your_men=0;
-		enemy_men=0;
-		ras=0;
-		mobil=0;
+		your_men_guard=0;
+		your_men_krest=0;
+		your_men_extra=0;
+		enemy_men_guard=0;
+		enemy_men_krest=0;
+		ras_guard=0;
+		ras_krest=0;
+--		mobil=0;
 		ch_money=0;
 		ch_gold=0;
 		ch_land=0;

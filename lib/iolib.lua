@@ -21,7 +21,7 @@ function _walk(where)
 end;
 
 function round(num, idp)
-  return tonumber(string.format("%." .. (idp or 0) .. "f", num))
+  return math.ceil(num)
 end
 
 

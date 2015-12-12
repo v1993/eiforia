@@ -5,6 +5,17 @@ stead.module_init(function()
 	return true
 end);
 
+-- m -- нижний предел, n -- верхний, a -- кол-во знаков после запятой
+rndfr = function(m, n, a)
+	m = m or 0;
+	n = n or 1;
+	a = a or 0;
+	a = 10 ^ a;
+	m = m * a;
+	n = n * a;
+	local b = math.random(m, n);
+	return b/a;
+end;
 
 rnd = stead.hook(rnd, function(f, m)
 	if m < 1 then

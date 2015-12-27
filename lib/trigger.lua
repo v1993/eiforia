@@ -13,6 +13,7 @@ function trigger(act, cond)
 	end
 	v.cond = cond;
 	v.life = function(s)
+		if here().menuroom then return end;
 		if stead.call_bool(s, 'cond') then
 			s:off()
 			local r,v = stead.call(s, 'act')

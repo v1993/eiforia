@@ -1,9 +1,22 @@
+-- Пояснение: канал 0 -- клик, 1 -- музыка, 2 -- эффекты
 stead.module_init(function()
+	stead.busy(true);
 	click_snd = sound.load('snd/click.ogg');
+	turning_snd = sound.load('snd/turning.ogg');
+	main_snd = sound.load('snd/main.ogg');
+	game_snd = sound.load('snd/game.ogg');
 	andale = font('fonts/Andale_Mono.ttf', 16);
 	times = font('fonts/Times_New_Roman.ttf', 16);
+	stead.busy(false);
 	return true
 end);
+
+play_music = function(snd, ch, loop, timestop)
+	if prefs.music then
+		sound.stop(ch, timestop)
+		sound.play(snd, ch, loop);
+	end;
+end;
 
 -- m -- нижний предел, n -- верхний, a -- кол-во знаков после запятой
 rndfr = function(m, n, a)
@@ -35,9 +48,10 @@ nimg = img('gfx/N.png');
 
 function click()
 	sound.stop("0");
-	sound.play(click_snd, "0", "1");
+	sound.play(click_snd, 0, 1);
 end
 jump = xact('jump', code [[ walk(arg1) ]]);
+jumpout = xact('jumpout', code [[ walkout() ]]);
 jumpsnd = xact('jumpsnd', code [[ click(); walk(arg1) ]]);
 function _andale(text)
   return function()

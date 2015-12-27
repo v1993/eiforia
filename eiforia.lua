@@ -25,6 +25,8 @@ vars_reset = function()
 	ochki=0;
 	for_xram=0;
 	fl_r=0;
+	fl_mar_war=0;
+	fl_mal_war=0;
 	fl_kar=0;
 	fl_marry=0;
 	fl_end=0;
@@ -122,13 +124,13 @@ nextstep = function()
 		elseif ecstate == 7 then
 			chtype = 1;
 			retry = true;
-		elseif ecstate == 8 and fl_marry == 0 and rnd(100) < 15 then
+		elseif ecstate == 8 and fl_marry < prefs.maxwife and rnd(100) < 15 then
 			walk "svadba";
 			chtype = 1;
 		elseif ecstate == 8 then
 			chtype = 1;
 			retry = true;
-		elseif ecstate == 9 and fl_marry > 0 and year_marry == 0 and rnd(100) < 10 then
+		elseif ecstate == 9 and fl_marry > 0 and (year_marry == 0 or fl_marry > 1) and rnd(100) < 10 then
 			walk "wife_dead1";
 			chtype = 1;
 		elseif ecstate == 9 then
@@ -139,7 +141,7 @@ nextstep = function()
 			retry = true;
 		end;
 	elseif cstate == 2 then
-		if ecstate == 0 and fl_marry == 1 then
+		if ecstate == 0 and fl_marry > 0 then
 			walk "koroleva_prosit1";
 			chtype = 1;
 		elseif ecstate == 0 then -- На всякий случай
@@ -669,7 +671,7 @@ war1 = yesnoroom {
 			pn "Соседние короли, видя малочисленность Ваших войск, объявили Вам ВОЙНУ!";
 		end;
 		pn ("Разведка доносит о предполагаемой численности войск врага: "..ras_guard.." "..sodnam(ras_guard).." и "..ras_krest.." "..krestnam(ras_krest)..".");
-		p ("Ваши силы: "..your_men_guard.." "..sodnam(ras_guard)..". Объявляете мобилизацию крестьян?");
+		p ("Ваши силы: "..your_men_guard.." "..sodnam(your_men_guard)..". Объявляете мобилизацию крестьян?");
 	end;
 	yes = function(s)
 		your_men_krest = round((rnd(50)+50)*cur_krest/100);
@@ -1127,7 +1129,7 @@ svadba1 = cutscene {
 	nam = "Информация";
 	enter = function(s)
 		wife_deneg = round((rnd(40)+20)*cur_money/100);
-		fl_marry=1;
+		fl_marry=fl_marry+1;
 	end;
 	dsc = function(s)
 		local str = ("Поздравляю. На свадебный пир потрачено "..wife_deneg.." "..rubnam(wife_deneg)..".");
@@ -1257,7 +1259,7 @@ wife_dead1 = yesnoroom {
 
 wife_dead2 = cutscene {
 	nam = "Великое несчастье!";
-	enter = code[[wife_deneg=round((rnd(40)+20)*cur_money/100);cur_money=cur_money-wife_deneg;fl_marry=0;]];
+	enter = code[[wife_deneg=round((rnd(40)+20)*cur_money/100);cur_money=cur_money-wife_deneg;fl_marry=fl_marry-0;]];
 	dsc = function(s)
 		if dead_prinal == 0 then
 			pn "Хоть Вы и не приняли гонца, но печальная весть все равно дошла до Вас.";
@@ -1277,7 +1279,7 @@ wife_dead2 = cutscene {
 
 rodilsa_sin = cutscene {
 	nam = "Поздравляю!";
-	enter = code[[wife_deneg=round((rnd(40)+20)*cur_money/100);cur_money=cur_money-wife_deneg;fl_marry=0;]];
+	enter = code[[wife_deneg=round((rnd(40)+20)*cur_money/100);cur_money=cur_money-wife_deneg;]];
 	dsc = function(s)
 		local str = "У Вас родился сын! Поздравляю! Ваша династия не угаснет в веках!";
 		for c in str:gmatch"." do
@@ -1646,7 +1648,7 @@ newyear1 = cutscene {
 
 yeartoyear = cutscene {
 	nam = "Прошёл год";
-	enter = function(s) s.kbduse = false; hook_enter(); end;
+	enter = function(s) s.kbduse = false; hook_enter(); sound.play(turning_snd, 2, 1); end;
 	exit = function(s) s.kbduse = false; unhook_enter(); end;
 	var {kbduse = false};
 	kbd = function(s, down, key)

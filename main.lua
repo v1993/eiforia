@@ -1,16 +1,17 @@
 -- $Name: Королевство Эйфория$
--- $Version: 0.1.1$
+-- $Version: 0.2$
 -- $Author: Очинский Валерий$
 instead_version "2.1.0"
 game.forcedsc = true;
 stead.scene_delim = '^'
---require "dbg"
+require "dbg"
 require "prefs"
 require "para"
 require "dash"
 require "quotes"
-require "xact"
 require "kbd"
+require "preload"
+require "xact"
 require "sound"
 require "timer"
 require "lib/trigger"
@@ -21,30 +22,50 @@ require "lib/iolib"
 dofile "eiforia.lua"
 game.enable_save = false
 function init()
+	lifeon(mplayer);
 	setunderline(500);
+	if prefs.music == nil then
+		prefs.music = true;
+	end;
+	if prefs.maxwife == nil then
+		prefs.maxwife = 1;
+	end;
 --	take (hookobj);
 --	take (unhookobj);
 end;
 
+function start()
+	if prefs.music then
+		if here().menuroom and sound.playing(1) ~= main_snd then
+			sound.stop(1);
+			sound.play(main_snd, 1)
+		elseif not here().menuroom and sound.playing(1) ~= game_snd then
+			sound.stop(1);
+			sound.play(game_snd, 1)
+		end;
+	end;
+end;
 --hookobj = menu { nam = "hookobj"; disp = "hook_all"; menu = code [[return hook_all();]]}
 --unhookobj = menu { nam = "unhookobj"; disp = "unhook_all"; menu = code [[return unhook_all();]]}
 
 main = room {
 	nam = "Главное меню";
+	menuroom = true;
 	pic = "gfx/main.png";
 	entered = code [[hook_all()]];
-	exit = code [[unhook_all()]];
+--	exit = code [[unhook_all()]];
 	kbd = function(s, down, key)
 		if down then
 			if key == "1" then
 				click();
 				return start_game();
-			end
-			if key == "2" then
+			elseif key == "2" then
 				click();
 				return walk(help);
-			end
-			if key == "3" then
+			elseif key == "3" then
+				click();
+				return walk(settigs);
+			elseif key == "4" then
 				click();
 				stead.menu_toggle('quit');
 			end
@@ -53,18 +74,23 @@ main = room {
 	dsc = [[Добо пожаловать в игру "Королевство Эйфория". Если вы играете впервые, рекомендуется прочесть раздел "Помощь".^^
 1. {newgame|Начать игру}^
 2. {tohelp|Помощь}^
-3. {exit|Выход}
+3. {sets|Настройки}^
+4. {exit|Выход}
 ]];
 	obj = {
 	xact('newgame', code [[start_game()]]),
 	xact('tohelp', code [[walk (help)]]),
+	xact('sets', code [[walk (settings)]]),
 	xact('exit', code [[stead.menu_toggle('quit')]])};
 };
 help = xenterroom {
 	nam = "Помощь";
-	press = code [[ click(); walk (main)]];
+	menuroom = true;
+	press = function(s) click(); walkout(); end;
 	dsc = _andale ([[
       Нехитрые правила игры.^
+      Для вызова справки в любое время нажмите F5.
+      Для вызова меню параметров нажмите F6.
    Первое. Вашим подданным нужно кушать. На каждого человека - крестьянина или
 гвардейца - нужно в год 3 тонны зерна (стандартная норма). Если дадите меньше,
 то могут быть такие последствия: 1) дадите от 70% до 99%. Вас немного пожурят
@@ -119,5 +145,136 @@ help = xenterroom {
 Благодарности:^
 Всем, кто (как минимум) не мешал. :}
 ]]);
-xdsc = make_enter("jump(main)");
+xdsc = make_enter("jumpout");
+};
+
+mplayer = obj {
+	nam = 'mplayer';
+	life = function(s)
+		if sound.playing(1) and not prefs.music then
+			sound.stop(1);
+			return;
+		end;
+		if prefs.music then
+			if here().menuroom and sound.playing(1) ~= main_snd then
+				sound.stop(1);
+				sound.play(main_snd, 1)
+			elseif not here().menuroom and sound.playing(1) ~= game_snd then
+				sound.stop(1);
+				sound.play(game_snd, 1)
+			end;
+		end;
+	end;
 }
+
+--[[
+	Настройки:
+	Меняет prefs переменные настройки.
+	Синтаксис:
+	Переключатель:
+	{'Имя', 'boolean', 'вкл. состояние', 'выкл. состояние', 'prefs.имя'}
+	Пример:
+	{'Музыка', 'boolean', 'включена', 'выключена', 'music'}
+	Число:
+	{'Имя', 'number', минимальное число (nil -- 0), максимальное число (nil или 0 -- неограничено), шаг (nil -- 1), 'prefs.имя'}
+	Пример:
+	{'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}
+	Список:
+	{'Имя', 'list', {{'в переменную 1', 'показать 1'}, {'в переменную 2', 'показать 2', и т. д.}}, 'prefs.имя'}
+	Пример:
+	{'Язык', 'list', {{'ru', 'русский'}, {'en', 'english'}}, 'lang'}
+]]--
+settings = xenterroom {
+	nam = "Настройки игры";
+	press = function(s) click(); walkout(); end;
+	sets = {{'Музыка', 'boolean', 'включена', 'выключена', 'music'}, {'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}};
+	menuroom = true;
+	switch = function(nam)
+		if nam == 'out' then
+			walkout();
+			return;
+		end;
+		local i, n, t;
+		for i in pairs(here().sets) do
+			i = here().sets[i];
+			if i[#i] == nam and i[2] == 'boolean' then
+				local c = stead.eval('prefs.'..i[#i]..' = not prefs.'..i[#i]);
+				c();
+				prefs:save();
+			elseif i[#i] == nam and i[2] == 'list' then
+				local cur = evalvar('prefs.'..i[#i]);
+				local pre = false;
+				for n in pairs(i[3]) do
+					t = i[3][n];
+					if pre then
+						pre = false;
+						local c = stead.eval('prefs.'..i[#i]..' = "'..t[1]..'"');
+--						print (evalvar('prefs.'..i[#i]));
+						c();
+--						print (evalvar('prefs.'..i[#i]));
+						break;
+					end;
+					if t[1] == cur then
+						pre = true;
+					end;
+				end;
+				if pre then
+					local c = stead.eval('prefs.'..i[#i]..' = "'..i[3][1][1]..'"');
+					c();
+				end;
+				prefs:save();
+			end;
+		end;
+	end;
+	enter = function(s)
+		s.obj:zap();
+		local i;
+		for i in pairs(s.sets) do
+			i = s.sets[i];
+			if i[2] == 'boolean' then
+				local c = ('if prefs.'..i[5]..' then v="'..i[3]..'" else v="'..i[4]..'" end pn("'..i[1]..': {" .. v .. "}")');
+				put (vobj (i[5], code (c)))
+			elseif i[2] == 'number' then
+				local plus = (i[#i]..'plus');
+				local minus = (i[#i]..'minus');
+				local mini = i[3] or 0;
+				local maxi = i[4] > 0 and i[4] or nil;
+				local step = i[5] or 1;
+				local c = ('pn ("'..i[1]..': {'..minus..'|-} "..tostring(prefs.'..i[#i]..').." {'..plus..'|+}")');
+				local plusc;
+				if maxi then
+					plusc = ('if prefs.'..i[#i]..'+'..tostring(step)..' <= '..tostring(maxi)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'+'..tostring(step)..'; prefs:save(); return true; end');
+				else
+					plusc = ('prefs.'..i[#i]..'=prefs.'..i[#i]..'+'..tostring(step)..'; prefs:save(); return true');
+				end;
+--				print(plusc);
+				local minusc = ('if prefs.'..i[#i]..'-'..tostring(step)..' >= '..tostring(mini)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'-'..tostring(step)..'; prefs:save(); return true end');
+--				print(minusc);
+				put (vobj (i[#i], code (c)));
+				put (xact(plus, code (plusc)));
+				put (xact(minus, code (minusc)));
+			elseif i[2] == 'list' then
+				local c = ([[
+					local i, n;
+					for i in pairs(]]..stead.deref(s)..[[.sets) do
+						i = ]]..stead.deref(s)..[[.sets[i];
+						if i[2] == 'list' and i[4] == ']]..i[4]..[[' then
+							for n in pairs(i[3]) do
+								n = i[3][n];
+								if prefs.]]..i[4]..[[ == n[1] then
+									pn (']]..i[1]..[[: {'..n[2]..'}');
+								end;
+							end;
+						end;
+					end;]]
+				);
+				put (vobj (i[4], code (c)));
+			end;
+		end;
+		put (vobj ('out', code [[return make_enter('jumpout')]]));
+	end;
+	act = function (s, w)
+		s.switch (w)
+		return true
+	end
+};

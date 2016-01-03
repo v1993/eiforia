@@ -253,6 +253,7 @@ make_turn = function()
 	if fl_kar == 6 then
 		fl_kar = 0;
 		kar_pribil = round(for_kar*6);
+		cur_money=cur_money+kar_pribil;
 	else
 		kar_pribil = 0;
 	end;
@@ -1820,7 +1821,9 @@ eiforia = obj {
 		land=100;
 		zerno=1000;
 		krest=100;
+--		krest=125;
 		guard=100;
+--		cattle=25;
 		-- текущее состояние ресурсов
 		cur_money=0;cur_gold=0;cur_land=0;cur_zerno=0;cur_krest=0;cur_guard=0;
 		build_xram=0;
@@ -1867,6 +1870,28 @@ eiforia = obj {
 		fl_lec=0;
 		illend=0;
 		god=1;
+		-- Новое (не реализованно)
+		-- Скот (cattle)
+		--cur_cattle=0;
+		--ch_cattle=0;
+		--cur_pr_cattle=0;
+		--pr_cattle=100;
+		--for_cattle=0; -- На еду скоту
+		--cattle_run=0; -- Скота сбежало
+		--max_cattle_krest=2; -- Макс. животных на крестьянина
+		--cattle_zerno=3; -- Зерна на скотину в год
+		--add_cattle=0; -- Родилось скота
+		--cattle_dead=0; -- Умерло скота
+		---- Мясо (meat)
+		--cur_meat=0;
+		--ch_meat=0;
+		--cur_pr_meat=0;
+		--pr_meat=100;
+		--meat_broken=0; -- Мяса испортилось
+		---- Едобаллы (eats)
+		--eats_need=0;
+		--eats_gave=0;
+		--eats_one_man=0;
 		-- Доп. переменные, юзаются где попало
 		-- Война и не только
 		your_men_guard=0;

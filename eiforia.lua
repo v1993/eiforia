@@ -26,7 +26,9 @@ vars_reset = function()
 	for_xram=0;
 	fl_r=0;
 	fl_mar_war=0;
+	why_mar_war=0;
 	fl_mal_war=0;
+	why_mal_war=0;
 	fl_kar=0;
 	fl_marry=0;
 	fl_end=0;
@@ -91,25 +93,37 @@ nextstep = function()
 			chtype = 1;
 			retry = true;
 		elseif ecstate == 3 and fl_mar_war == 1 then
+			why_mar_war = 1;
 			walk "war1";
 			chtype = 1;
 		elseif ecstate == 3 then
 			chtype = 1;
 			retry = true;
 		elseif ecstate == 4 and rnd(100) > cur_guard then
+			fl_mar_war=(why_mar_war==1 and 0);
+			why_mar_war = 0;
 			fl_mal_war = 1;
+			why_mal_war = 1;
 			walk "war1";
 			chtype = 1;
 		elseif ecstate == 4 and rnd(100) < 30 then
+			fl_mar_war=(why_mar_war==1 and 0);
+			why_mar_war = 0;
 			walk "prewar";
 			chtype = 1;
 		elseif ecstate == 4 then
+			fl_mar_war=(why_mar_war==1 and 0);
+			why_mar_war = 0;
 			chtype = 1;
 			retry = true;
 		elseif ecstate == 5 and fl_vis == 1 and rnd(100) < 15 then
+			fl_mal_war=0;
+			why_mal_war=0;
 			walk "poimali_visir";
 			chtype = 1;
 		elseif ecstate == 5 then
+			fl_mal_war=0;
+			why_mal_war=0;
 			chtype = 1;
 			retry = true;
 		elseif ecstate == 6 and rnd(100) < 10 then
@@ -666,9 +680,9 @@ war1 = yesnoroom {
 	nam = "Война";
 	pic = "gfx/war.png";
 	question = function(s)
-		if fl_mar_war == 1 then
+		if why_mar_war == 1 then
 			pn "Разозленный отказом жениться на его дочке, соседний король начал ВОЙНУ!";
-		elseif fl_mal_war == 1 then
+		elseif why_mal_war == 1 then
 			pn "Соседние короли, видя малочисленность Ваших войск, объявили Вам ВОЙНУ!";
 		end;
 		pn ("Разведка доносит о предполагаемой численности войск врага: "..ras_guard.." "..sodnam(ras_guard).." и "..ras_krest.." "..krestnam(ras_krest)..".");
@@ -820,13 +834,6 @@ war3 = enterroom {
 warvictory = xenterroom {
 	nam = code [[return (andale:txt ("Победа!!!", 'green', 5));]];
 	pic = "gfx/warvictory.png";
-	exit = function(s)
-		if fl_mar_war == 1 then
-			fl_mar_war = 0;
-		elseif fl_mal_war == 1 then
-			fl_mal_war = 0;
-		end;
-	end;
 	dsc = function(s)
 		p (andale:txt ("Вы победили!", 'green'));
 		p "Ваша армия захватила трофеи:";
@@ -840,13 +847,6 @@ warvictory = xenterroom {
 warloss = xenterroom {
 	nam = code [[return (andale:txt ("Поражение...", 'red', 5));]];
 	pic = "gfx/warloss.png";
-	exit = function(s)
-		if fl_mar_war == 1 then
-			fl_mar_war = 0;
-		elseif fl_mal_war == 1 then
-			fl_mal_war = 0;
-		end;
-	end;
 	dsc = function(s)
 		p (andale:txt ("Вы проиграли...", 'red'));
 		p " Ваши потери в этой войне:";
@@ -1865,7 +1865,9 @@ eiforia = obj {
 		fl_end=0;
 		fl_vis=0;
 		fl_mar_war=0;
+		why_mar_war=0;
 		fl_mal_war=0;
+		why_mal_war=0;
 		fl_block=0;
 		fl_lec=0;
 		illend=0;

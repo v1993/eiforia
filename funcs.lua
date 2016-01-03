@@ -11,13 +11,6 @@ stead.module_init(function()
 	return true
 end);
 
-play_music = function(snd, ch, loop, timestop)
-	if prefs.music then
-		sound.stop(ch, timestop)
-		sound.play(snd, ch, loop);
-	end;
-end;
-
 -- m -- нижний предел, n -- верхний, a -- кол-во знаков после запятой
 rndfr = function(m, n, a)
 	m = m or 0;

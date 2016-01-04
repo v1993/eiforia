@@ -179,8 +179,8 @@ numberinput = function(reaction, msg, nam)
 	return obj(v);
 end
 enterroom = function(v)
-	v.entered = code [[hook_keys('return')]];
-	v.exit = code [[unhook_keys('return')]];
+	v.entered = code [[hook_enter()]];
+	v.exit = code [[unhook_enter()]];
 	v.kbd = function(s, down, key)
 		if down and key == "return" then
 			return stead.call(s, 'press');
@@ -193,8 +193,8 @@ enterroom = function(v)
 end;
 
 xenterroom = function(v)
-	v.entered = code [[hook_keys('return')]];
-	v.exit = code [[unhook_keys('return')]];
+	v.entered = code [[hook_enter()]];
+	v.exit = code [[unhook_enter()]];
 	v.kbd = function(s, down, key)
 		if down and key == "return" then
 			click();

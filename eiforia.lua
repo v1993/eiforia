@@ -1368,6 +1368,7 @@ choicezerno1 = yesnoroom {
 	question = "Желаете сами распределить расход зерна?";
 	enter = function(s)
 		if cur_krest == 0 and cur_guard == 0 then
+			cstate=cstate+1;
 			return nextstep();
 		elseif (cur_krest > 0 or cur_guard > 0) and cur_zerno == 0 then
 			for_eat=0;

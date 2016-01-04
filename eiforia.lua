@@ -1260,7 +1260,7 @@ wife_dead1 = yesnoroom {
 
 wife_dead2 = cutscene {
 	nam = "Великое несчастье!";
-	enter = code[[wife_deneg=round((rnd(40)+20)*cur_money/100);cur_money=cur_money-wife_deneg;fl_marry=fl_marry-0;]];
+	enter = code[[wife_deneg=round((rnd(40)+20)*cur_money/100);cur_money=cur_money-wife_deneg;fl_marry=fl_marry-1;]];
 	dsc = function(s)
 		if dead_prinal == 0 then
 			pn "Хоть Вы и не приняли гонца, но печальная весть все равно дошла до Вас.";

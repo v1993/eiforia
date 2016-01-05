@@ -29,7 +29,7 @@ vars_reset = function()
 	why_mar_war=0;
 	fl_mal_war=0;
 	why_mal_war=0;
-	fl_kar=0;
+	fl_kar={};
 	fl_marry=0;
 	fl_end=0;
 	fl_lec=0;
@@ -74,13 +74,13 @@ nextstep = function()
 		make_price();
 		walk "startyear";
 	elseif cstate == 1 then
-		if ecstate == 0 and fl_kar == 0 and rnd(100) < 25 then
+		if ecstate == 0 and rnd(100) < 25 then
 			walk "snaradkar";
 			chtype = 1;
 		elseif ecstate == 0 then
 			chtype = 1;
 			retry = true;
-		elseif ecstate == 1 and fl_kar > 0 and rnd(100) < 20 then
+		elseif ecstate == 1 and rnd(100)*#fl_kar < 20 and #fl_kar > 0 then
 			walk "grabegkar";
 			chtype = 1;
 		elseif ecstate == 1 then
@@ -261,15 +261,18 @@ make_turn = function()
 		fl_block = 0;
 	end;
 	-- Обработка каравана
-	if fl_kar > 0 then
-		fl_kar = fl_kar + 1;
+	local kar_rm={};
+	for i in pairs(fl_kar) do
+		if fl_kar[i][2] == 6 then
+			table.insert(kar_rm, i);
+		else
+			fl_kar[i][2] = fl_kar[i][2]+1;
+		end;
 	end;
-	if fl_kar == 6 then
-		fl_kar = 0;
-		kar_pribil = round(for_kar*6);
+	for i in pairs(kar_rm) do
+		kar_pribil=round(fl_kar[i][1]*6);
 		cur_money=cur_money+kar_pribil;
-	else
-		kar_pribil = 0;
+		table.remove(fl_kar, i);
 	end;
 	-- Обработка королевы
 	year_marry = 0;
@@ -925,8 +928,7 @@ snaradkarenter = moneyinput(
 		objs():del(s);
 		if tonumber(text) > 0 then
 			cur_money = cur_money-(tonumber(text));
-			for_kar = tonumber(text);
-			fl_kar = 1;
+			table.insert(fl_kar, {tonumber(text), 1});
 			walk "snaradkar1";
 		else
 			nextstep();
@@ -957,19 +959,19 @@ grabegkar = xenterroom {
 	nam = _warn("ЧП!!!");
 	enter = function(s)
 		local n = rnd(100);
+		local kar_to_grab=rnd(#fl_kar);
 		if n < 5 then
 			grabkar_type = "full";
-			fl_kar = 0;
-			for_kar = 0;
+			table.remove(fl_kar, kar_to_grab)
 		else
 			n=rnd(40);
 			grabkar_type = null;
-			grabkar=round((for_kar*n)/100);
+			grabkar=round((fl_kar[kar_to_grab][1]*n)/100);
 			n=rnd(40);
 			if n < 10 then
-				for_kar=round(for_kar-grabkar);
+				fl_kar[kar_to_grab][1]=round(fl_kar[kar_to_grab][1]-grabkar);
 			else
-				for_kar=round(for_kar-(grabkar/6));
+				fl_kar[kar_to_grab][1]=round(fl_kar[kar_to_grab][1]-(grabkar/6));
 			end;
 		end;
 	end;
@@ -1860,7 +1862,7 @@ eiforia = obj {
 		urog=7;
 		fl_urog=0;
 		fl_r=0;
-		fl_kar=0;
+		fl_kar={};
 		kar_pribil=0;
 		fl_marry=0;
 		fl_end=0;

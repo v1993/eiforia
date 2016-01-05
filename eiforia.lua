@@ -99,14 +99,14 @@ nextstep = function()
 		elseif ecstate == 3 then
 			chtype = 1;
 			retry = true;
-		elseif ecstate == 4 and rnd(100) > cur_guard then
+		elseif ecstate == 4 and rnd(100) > cur_guard and (cur_guard ~= 0 or cur_krest ~=0) then
 			fl_mar_war=(why_mar_war==1 and 0);
 			why_mar_war = 0;
 			fl_mal_war = 1;
 			why_mal_war = 1;
 			walk "war1";
 			chtype = 1;
-		elseif ecstate == 4 and rnd(100) < 30 then
+		elseif ecstate == 4 and rnd(100) < 30 and (cur_guard ~= 0 or cur_krest ~=0) then
 			fl_mar_war=(why_mar_war==1 and 0);
 			why_mar_war = 0;
 			walk "prewar";

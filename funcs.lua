@@ -48,25 +48,25 @@ jumpout = xact('jumpout', code [[ walkout() ]]);
 jumpsnd = xact('jumpsnd', code [[ click(); walk(arg1) ]]);
 function _andale(text)
   return function()
-    return p (andale:txt (text));
+    return pr (andale:txt (text, color, style));
   end
 end
-function andalefnt(text)
-    return p (andale:txt (text));
+function andalefnt(text, color, style)
+    return pr (andale:txt (text, color, style));
 end
-function _times(text)
+function _times(text, color, style)
   return function()
-    return p (times:txt (text));
+    return pr (times:txt (text, color, style));
   end
 end
-function timesfnt(text)
-    return p (times:txt (text));
+function timesfnt(text, color, style)
+    return pr (times:txt (text, color, style));
 end
 function _warn(text)
   return function()
-    return p (andale:txt (text, 'red', 1));
+    return pr (andale:txt (text, 'red', 1));
   end
 end
 function warnfnt(text)
-    return p (andale:txt (text, 'red', 1));
+    return pr (andale:txt (text, 'red', 1));
 end

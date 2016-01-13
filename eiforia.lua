@@ -33,6 +33,7 @@ vars_reset = function()
 	fl_marry=0;
 	fl_end=0;
 	fl_lec=0;
+	fl_vis={};
 	god=1;
 	-- Доп. переменные, юзаются где попало
 	-- Королева
@@ -116,7 +117,7 @@ nextstep = function()
 			why_mar_war = 0;
 			chtype = 1;
 			retry = true;
-		elseif ecstate == 5 and fl_vis == 1 and rnd(100) < 15 then
+		elseif ecstate == 5 and #fl_vis > 0 and rnd(100) < 15 then
 			fl_mal_war=0;
 			why_mal_war=0;
 			walk "poimali_visir";
@@ -171,8 +172,10 @@ nextstep = function()
 			ecstate = 0;
 			retry = true;
 		end;
-	elseif cstate == 3 then
+	elseif cstate == 3 and prefs.ed_eat > 0 then
 		walk "choicezerno1";
+	elseif cstate == 3 then
+		retry = true;
 	elseif cstate == 4 then
 		walk "isend";
 	elseif cstate == 5 then
@@ -238,7 +241,7 @@ make_turn = function()
 		run_guard = 0;
 	end;
 	cur_money = cur_money - abs_sod_guard;
-	-- Обработка похищения золота
+	-- Обработка похищения золота/денег
 	if cur_gold > 0 and rnd(100)<20 then
 		grab_gold = round((rnd(25)*cur_gold)/100);
 		grab_gold2 = grab_gold;
@@ -246,11 +249,10 @@ make_turn = function()
 	else
 		grab_gold = 0;
 	end;
-	if cur_money > 0 and rnd(100)<10 and fl_vis == 0 then
+	if cur_money > 0 and rnd(100)<10 then
 		grab_money = round((rnd(25)*cur_money)/100);
-		grab_money2 = grab_money;
+		table.insert(fl_vis, grab_money);
 		cur_money = cur_money - grab_money
-		fl_vis = 1;
 	else
 		grab_money = 0;
 	end;
@@ -263,16 +265,24 @@ make_turn = function()
 	-- Обработка каравана
 	local kar_rm={};
 	for i in pairs(fl_kar) do
-		if fl_kar[i][2] == 6 then
+		if fl_kar[i][2] == 5 then
 			table.insert(kar_rm, i);
 		else
 			fl_kar[i][2] = fl_kar[i][2]+1;
 		end;
 	end;
-	for i in pairs(kar_rm) do
-		kar_pribil=round(fl_kar[i][1]*6);
-		cur_money=cur_money+kar_pribil;
-		table.remove(fl_kar, i);
+	if #kar_rm == 0 then
+		kar_pribil=0;
+	else
+		for i in pairs(kar_rm) do
+			deled = true;
+			kar_pribil=round(fl_kar[i][1]*6);
+			cur_money=cur_money+kar_pribil;
+			table.remove(fl_kar, i);
+		end;
+	end;
+	if not deled then
+		kar_pribil=0;
 	end;
 	-- Обработка королевы
 	year_marry = 0;
@@ -330,6 +340,21 @@ end;
 sklon4 = function(num, t1, t2)
 	return sklon2(num, t1, t1, t2)
 end;
+
+resetgamevars = function()
+	prefs:load();
+	if not isvanila() then
+		prefs.maxwife=1;
+		prefs.ed_eat=3;
+		prefs:save();
+		return true;
+	end;
+end;
+isvanila = function()
+	return (prefs.maxwife == 1 and prefs.ed_eat == 3);
+end;
+
+resetgamevars_xact = xact('resetgamevars_xact', code [[return resetgamevars()]]);
 
 nextstep_xact = xact('nextstep_xact', code [[return nextstep()]]);
 
@@ -1135,7 +1160,7 @@ svadba1 = cutscene {
 		fl_marry=fl_marry+1;
 	end;
 	dsc = function(s)
-		local str = ("Поздравляю. На свадебный пир потрачено "..wife_deneg.." "..rubnam(wife_deneg)..".");
+		local str = ("Поздравляю. На свадебный пир "..sklon3(wife_deneg, 'потрачен', 'потрачено').." "..wife_deneg.." "..rubnam(wife_deneg)..".");
 		for c in str:gmatch"." do
 			pr (c.."{pause 30}{fading 1}");
 		end
@@ -1383,7 +1408,7 @@ choicezerno1 = yesnoroom {
 	exit = code [[unhook_all()]];
 	yes = code [[return walk "choicezerno2"]];
 	no = function(s)
-		for_eat=(cur_krest+cur_guard)*ed_eat;
+		for_eat=(cur_krest+cur_guard)*prefs.ed_eat;
 		for_posev=math.min(cur_land,cur_krest)*ed_posev;
 		if ((for_eat+for_posev)<=cur_zerno) then
 			zerno_nemog = 0;
@@ -1424,7 +1449,7 @@ choicezerno2 = room {
 			pn "Напоминаю, Ваше состояние сейчас составляет:";
 			pn ("Земля - "..cur_land.." га, крестьяне - "..cur_krest.." "..sklon2(cur_krest, "душа", "души", "душ")..", гвардия - "..cur_guard.." "..mannam(cur_guard).." чел.");
 			pn ("Запас зерна в амбарах - "..cur_zerno.." "..sklon2(cur_zerno, "тонна", "тонны", "тонн")..".");
-			p ("В идеале: на еду -- "..(cur_krest+cur_guard)*ed_eat.." "..sklon2((cur_krest+cur_guard)*ed_eat, "тонна", "тонны", "тонн")..", на посев -- "..math.min(cur_land,cur_krest)*ed_posev.." "..sklon2(math.min(cur_land,cur_krest)*ed_posev, "тонна", "тонны", "тонн")..".");
+			p ("В идеале: на еду -- "..(cur_krest+cur_guard)*prefs.ed_eat.." "..sklon2((cur_krest+cur_guard)*prefs.ed_eat, "тонна", "тонны", "тонн")..", на посев -- "..math.min(cur_land,cur_krest)*ed_posev.." "..sklon2(math.min(cur_land,cur_krest)*ed_posev, "тонна", "тонны", "тонн")..".");
 		end;
 		if s.state > 0 then
 			p ("^На еду выделено "..for_eat.." "..sklon2(for_eat, "тонна", "тонны", "тонн").." зерна.");
@@ -1457,7 +1482,7 @@ choicezerno3 = room {
 	enter = function(s)
 		local getted;
 		if (cur_krest + cur_guard) > 0 then
-			getted = (for_eat/ed_eat)/(cur_krest+cur_guard);
+			getted = (for_eat/prefs.ed_eat)/(cur_krest+cur_guard);
 		else
 			error "Это невозможная ситуация! Сообщите об ошибке, если она возникла при естественном ходе игры. А игру перезапустите.";
 		end;
@@ -1541,7 +1566,12 @@ choicezernoenter2 = checkinput(
 
 poimali_visir = xenterroom {
 	nam = "Поймали визиря";
-	enter = code [[grab_money2 = round((rnd(50)+50)*grab_money2/100); cur_money = cur_money+grab_money2; fl_vis = 0;]];
+	enter = function(s)
+		local ngr = rnd(#fl_vis);
+		grab_money2=round((rnd(50)+50)*fl_vis[ngr]/100);
+		table.remove(fl_vis, ngr);
+		cur_money = cur_money+grab_money2;
+	end;
 	dsc = function(s)
 		pn "Ваша полиция поймала сбежавшего визиря!";
 		pn "У него конфисковано все имущество, а его самого посадили на кол!";
@@ -1665,21 +1695,23 @@ yeartoyear = cutscene {
 	dsc = function(s)
 		pn "Прошёл год...{pic gfx/visir.png}{fading}{pause 1500}^Ваше Величество, прибыл Главный Визирь с докладом.{fading}{pause 1000}^Визирь сообщает:{fading}{pause 1000}";
 		pn ("Жалованье гвардии за прошлый год составило "..abs_sod_guard.." "..rubnam(abs_sod_guard)..".{pic gfx/money2.png}{fading}{pause 1000}");
-		if fl_urog == 0 then
-			pn "Страшная засуха поразила посевы. Очень неурожайный год."
-			pn ("Собрано всего "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
-		elseif fl_urog == 1 then
-			pn ("Урожайность была низкая. Собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
-		elseif fl_urog == 2 then
-			pn "Средний по урожайности год."
-			pn ("Наши крестьяне собрали "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
-		elseif fl_urog == 3 then
-			pn ("Урожайный год. Собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
-		else
-			pn "Пролившиеся вовремя дожди обеспечили невиданно высокий урожай.";
-			pn ("Амбары ломятся от зерна - собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." !");
+		if add_zerno > 0 then
+			if fl_urog == 0 then
+				pn "Страшная засуха поразила посевы. Очень неурожайный год."
+				pn ("Собрано всего "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
+			elseif fl_urog == 1 then
+				pn ("Урожайность была низкая. Собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
+			elseif fl_urog == 2 then
+				pn "Средний по урожайности год."
+				pn ("Наши крестьяне собрали "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
+			elseif fl_urog == 3 then
+				pn ("Урожайный год. Собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." зерна.");
+			else
+				pn "Пролившиеся вовремя дожди обеспечили невиданно высокий урожай.";
+				pn ("Амбары ломятся от зерна - собрано "..add_zerno.." "..sklon2(add_zerno, "тонна", "тонны", "тонн").." !");
+			end;
+			pr "{pic gfx/zerno2.png}{fading}{pause 2000}"
 		end;
-		pr "{pic gfx/zerno2.png}{fading}{pause 2000}"
 		if eat_rat > 0 then
 			pn ("Преступная халатность! Крысы сожрали "..eat_rat.." "..sklon2(eat_rat, "тонна", "тонны", "тонн").." зерна!{pic gfx/rats.png}{fading}{pause 2000}");
 		end;
@@ -1687,7 +1719,7 @@ yeartoyear = cutscene {
 			pn ("Число Ваших подданных увеличилось. "..sklon3(add_krest, "Родился", "Родилось").." "..add_krest.." "..sklon2(add_krest, "ребёнок", "ребёнка", "детей")..".{pic gfx/child.png}{fading}{pause 2000}");
 		end;
 		if run_krest > 0 then
-			pn ("Вашим крестьянам не хватает земли. "..sklon3(run_krest, "Сбежал", "Сбежало").." "..run_krest.." "..mannam(run_krest)..".{fading}{pause 2000}{pic gfx/run_krest.png}");
+			pn ("Вашим крестьянам не хватает земли. "..sklon3(run_krest, "Сбежал", "Сбежало").." "..run_krest.." "..mannam(run_krest)..".{pic gfx/run_krest.png}{fading}{pause 2000}");
 		end;
 		if run_guard > 0 then
 			pn "Не хватило денег на выплату денежного довольствия Вашей гвардии.";
@@ -1844,7 +1876,6 @@ eiforia = obj {
 		cur_pr_zerno=0;
 		cur_pr_krest=0;
 		cur_pr_guard=0;
-		for_kar=0;
 		for_xram=0;
 		abs_sod_guard=0;
 		run_krest=0;
@@ -1855,7 +1886,7 @@ eiforia = obj {
 		grab_money2=0;
 		grab_gold=0;
 		ed_posev=1;
-		ed_eat=3;
+--		ed_eat=3;
 		for_posev=0;
 		for_eat=0;
 		add_zerno=0;
@@ -1866,7 +1897,7 @@ eiforia = obj {
 		kar_pribil=0;
 		fl_marry=0;
 		fl_end=0;
-		fl_vis=0;
+		fl_vis={};
 		fl_mar_war=0;
 		why_mar_war=0;
 		fl_mal_war=0;
@@ -1876,6 +1907,7 @@ eiforia = obj {
 		illend=0;
 		god=1;
 		-- Новое (не реализованно)
+--		TODO: Реализовать!
 		-- Скот (cattle)
 		--cur_cattle=0;
 		--ch_cattle=0;

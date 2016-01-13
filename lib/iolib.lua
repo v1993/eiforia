@@ -10,7 +10,7 @@ function evalvar(n)
 end
 
 stead.module_init(function()
-	stead.add_var { underline = "_"; underlinenow = "_"; };
+	global {underlinenow = "_"; };
 	hook_keys('f1', 'f2');
 	return true
 end);
@@ -86,18 +86,14 @@ game.timer = function()
 	if underlinenow ~= "" then
 		underlinenow = ""
 	else
-		underlinenow = underline
+		underlinenow = prefs.underline
 	end
 	return true;
 end
 
-setunderline = function(delay, symbol)
+setunderline = function(delay)
 	timer:stop();
-	underline = symbol or underline;
-	--print (underline);
-	--print (symbol);
-	--print (delay);
-	if underline ~= nil and delay ~= nil then
+	if prefs.underline ~= nil and delay ~= nil then
 		timer:set(delay)
 	end
 end

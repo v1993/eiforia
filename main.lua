@@ -24,17 +24,67 @@ game.enable_save = false
 function init()
 	lifeon(mplayer);
 	setunderline(500);
+--	lifeon(dumper);
+--	take (hookobj);
+--	take (unhookobj);
+end;
+
+porting = function()
+	if stead.type(fl_kar) == 'number' then
+		fl_kar = {{for_kar, fl_kar}};
+		for_kar = nil;
+	end;
+end;
+
+dumper = obj {
+	nam = 'dumper';
+	life =  function()
+		local i,o
+		local rc=''
+		if stead.type(variables) ~= 'table' then
+			return
+		end
+		print ('In '..stead.deref(here())..', action #'..tostring(time())..':');
+		for i,o in stead.ipairs(variables) do
+			local v = _G[o];
+			local t = stead.tostring(v);
+			if t then
+				print(stead.par(' ', stead.tostr(o)..' : '..t));
+			end
+		end;
+		print();
+	end;
+}
+
+
+function start()
+	porting();
+	prefs:load();
 	if prefs.music == nil then
 		prefs.music = true;
 	end;
 	if prefs.maxwife == nil then
 		prefs.maxwife = 1;
 	end;
---	take (hookobj);
---	take (unhookobj);
-end;
-
-function start()
+	if prefs.debugout == nil then
+		prefs.debugout = false;
+	end;
+	if prefs.cursor == nil then
+		prefs.cursor = 'turning';
+	end;
+	if prefs.logsets == nil then
+		prefs.logsets = false;
+	end;
+	if prefs.ed_eat == nil then
+		prefs.ed_eat = 3;
+	end;
+	if prefs.underline == nil then
+		prefs.underline = '_';
+	end;
+	prefs:save();
+--[[	if prefs.lang == nil then
+		prefs.lang = 'ru';
+	end;]]--
 	if prefs.music then
 		if here().menuroom and sound.playing(1) ~= main_snd then
 			sound.stop(1);
@@ -71,7 +121,7 @@ main = room {
 			end
 		end
 	end;
-	dsc = [[Добо пожаловать в игру "Королевство Эйфория", версия 0.3. Если вы играете впервые, рекомендуется прочесть раздел "Помощь".^^
+	dsc = [[Добро пожаловать в игру "Королевство Эйфория", версия 0.3. Если вы играете впервые, рекомендуется прочесть раздел "Помощь".^^
 1. {newgame|Начать игру}^
 2. {tohelp|Помощь}^
 3. {sets|Настройки}^
@@ -87,12 +137,12 @@ help = xenterroom {
 	nam = "Помощь";
 	menuroom = true;
 	press = function(s) click(); walkout(); end;
-	dsc = _andale ([[
+	dsc = function() andalefnt ([[
       Нехитрые правила игры.^^
       Для вызова справки в любое время нажмите F1.^
       Для вызова меню параметров нажмите F2.^^
    Первое. Вашим подданным нужно кушать. На каждого человека - крестьянина или
-гвардейца - нужно в год 3 тонны зерна (стандартная норма). Если дадите меньше,
+гвардейца - нужно в год ]]..tostring(prefs.ed_eat)..[[ ]]..sklon2(prefs.ed_eat, "тонна", "тонны", "тонн")..[[ зерна (стандартная норма, можно изменить в натройках). Если дадите меньше,
 то могут быть такие последствия: 1) дадите от 70% до 99%. Вас немного пожурят
 и напомнят, что народ нужно кормить. 2) дадите от 40% до 69%. С вероятностью,
 обратно пропорциональной выделенной норме, может произойти революция, и
@@ -135,9 +185,9 @@ help = xenterroom {
 тем чаще будут нападать нахальные соседи. 3) Вы оскорбили какого-либо соседа
 отказом жениться на его дочке. Оскорбленный сосед обязательно покатит на Вас бочку (то бишь
 пойдет войной). Хотя, с другой стороны, согласившись на брак, Вы потратите кучу денег на
-свадебный пир, а там еще, может быть, и на день рождения сына. Решайте сами, что Вам выгодней...
+свадебный пир, а там еще, может быть, и на день рождения сына. Решайте сами, что Вам выгодней...^
 Успехов в управлении королевством.^^
-Оригинальная версия на C++: Ponpa Dmitriy, 41PDM., версия на INSTEAD: Очинский Валерий, 2015. ^
+Оригинальная версия на C++: Ponpa Dmitriy, 41PDM., версия на INSTEAD: Очинский Валерий, 2015-2016. ^
 Движок текстовых игр INSTEAD: Пётр Косых.^
 Также использованы изображения и шрифты из открытых источников, в т. ч. с commons.wikimedia.org и pixbay.com.^
 Музыка (скачано с Jamendo):^
@@ -147,7 +197,7 @@ Kingdom: Antonio Torres Ruiz^
 Тема оформления «Свиток (без инвентаря)»: excelenter.^
 Благодарности:^
 Всем, кто (как минимум) не мешал. :}
-]]);
+]]); end;
 xdsc = make_enter("jumpout");
 };
 
@@ -169,31 +219,81 @@ mplayer = obj {
 		end;
 	end;
 }
+debugoff = function()
+	prefs:load();
+	prefs.debugout=false;
+	here().extraction('debugout', false);
+	prefs.logsets=false;
+	prefs:save();
+	return true;
+end;
 
+debugoff_xact = xact('debugoff_xact', code [[return debugoff()]]);
 --[[
 	Настройки:
-	Меняет prefs переменные настройки.
+		Меняет prefs переменные настройки.
 	Синтаксис:
+	Текс:
+		{'Текст', 'text'}
+		Пример:
+		{'Просто текст', 'text'}
 	Переключатель:
-	{'Имя', 'boolean', 'вкл. состояние', 'выкл. состояние', 'prefs.имя'}
-	Пример:
-	{'Музыка', 'boolean', 'включена', 'выключена', 'music'}
+		{'Имя', 'boolean', 'вкл. состояние', 'выкл. состояние', 'prefs.имя'}
+		Пример:
+		{'Музыка', 'boolean', 'включена', 'выключена', 'music'}
 	Число:
-	{'Имя', 'number', минимальное число (nil -- 0), максимальное число (nil или 0 -- неограничено), шаг (nil -- 1), 'prefs.имя'}
-	Пример:
-	{'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}
+		{'Имя', 'number', минимальное число (nil -- 0), максимальное число (nil или 0 -- неограничено), шаг (nil -- 1), 'prefs.имя'}
+		Пример:
+		{'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}
 	Список:
-	{'Имя', 'list', {{'в переменную 1', 'показать 1'}, {'в переменную 2', 'показать 2', и т. д.}}, 'prefs.имя'}
-	Пример:
-	{'Язык', 'list', {{'ru', 'русский'}, {'en', 'english'}}, 'lang'}
+		{'Имя', 'list', {{'в переменную 1', 'показать 1'}, {'в переменную 2', 'показать 2', и т. д.}}, 'prefs.имя'}
+		Пример:
+		{'Язык', 'list', {{'ru', 'русский'}, {'en', 'english'}}, 'lang'}
 ]]--
 settings = xenterroom {
 	nam = "Настройки игры";
 	press = function(s) click(); walkout(); end;
-	sets = {{'Музыка', 'boolean', 'включена', 'выключена', 'music'}, {'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}};
+	sets = {
+	{txtc(txtb('Основные настройки:')), 'text'}, 
+	{'Музыка', 'boolean', 'включена', 'выключена', 'music'}, 
+	{'Курсор в полях ввода', 'list', {{'on', 'включен'}, {'off', 'выключен'}, {'turning', 'мигает'}}, 'cursor'}, 
+	{'Курсор', 'list', {{'_', '_'}, {'[]', '[]'}, {"|", "|"}}, 'underline'}, 
+	{txtc(txtb('Настройки игры:')), 'text'}, 
+	{txtem('Внимание! Изменение данных параметров классифицируется как читерство и подлежит использованию в чисто экспериментальных целях! Для отката в исходное состояние используйте кнопку "Сброс игровых настроек"'), 'text'}, 
+	{'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}, 
+	{'Зерна в год, тонн на человека', 'number', 0, 0, 1, 'ed_eat'}, 
+	{function () if not isvanila() then pn '{resetgamevars_xact|Сброс игровых настроек}'; end; end, 'text'}, 
+	{txtc(txtb('Инструменты отладки:')), 'text'}, 
+	{txtem('Внимание! Включение опций из данного раздела может привести  к генерировнию БОЛЬШИХ объёмов данных. Не включайте эти опции, если не уверены в том, что вам это надо! ^РАБОТАЕТ -- НЕ ТРОГАЙ!!! ^Если же вы их включили и усомнились в том, что это надо, срочно нажимайте "Выключить отладку" и живите спокойно.'), 'text'}, 
+	{'Печатать в консоль изменения настроек', 'boolean', 'да', 'нет', 'logsets'}, 
+	{'Отладочный вывод (ОЧЕНЬ ПОДРОБНЫЙ!!!) в консоль', 'boolean', 'включен', 'выключен', 'debugout'}, 
+	{function () if prefs.logsets or prefs.debugout then pn '{debugoff_xact|Выключить отладку}'; end; end, 'text'}
+	};
 	menuroom = true;
-	switch = function(nam)
-		if nam == 'out' then
+	extraction = function(nam, val)
+		if prefs.logsets then
+			print(nam..' is '..tostring(val))
+		end;
+		if nam == 'debugout' then
+			if val then
+				lifeon(dumper);
+			else
+				lifeoff(dumper);
+			end;
+		elseif nam == 'cursor' then
+			if val == 'off' then	
+				timer:stop();
+				underlinenow='';
+			elseif val == 'on' then	
+				timer:stop();
+				underlinenow=prefs.underline;
+			elseif val == 'turning' then
+					setunderline(500);
+			end;
+		end;
+	end;
+	switch = function(s, nam)
+		if nam == 'roomout' then
 			walkout();
 			return;
 		end;
@@ -228,13 +328,19 @@ settings = xenterroom {
 				prefs:save();
 			end;
 		end;
+		s.extraction(nam, evalvar('prefs.'..nam));
 	end;
 	enter = function(s)
 		s.obj:zap();
 		local i;
+		local printnam = function(str)
+			return (stead.type(str) == 'function' and str or str..'^');
+		end;
 		for i in pairs(s.sets) do
 			i = s.sets[i];
-			if i[2] == 'boolean' then
+			if i[2] == 'text' then
+				put (vobj (i[2], printnam(i[1])))
+			elseif i[2] == 'boolean' then
 				local c = ('if prefs.'..i[5]..' then v="'..i[3]..'" else v="'..i[4]..'" end pn("'..i[1]..': {" .. v .. "}")');
 				put (vobj (i[5], code (c)))
 			elseif i[2] == 'number' then
@@ -246,12 +352,12 @@ settings = xenterroom {
 				local c = ('pn ("'..i[1]..': {'..minus..'|-} "..tostring(prefs.'..i[#i]..').." {'..plus..'|+}")');
 				local plusc;
 				if maxi then
-					plusc = ('if prefs.'..i[#i]..'+'..tostring(step)..' <= '..tostring(maxi)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'+'..tostring(step)..'; prefs:save(); return true; end');
+					plusc = ('if prefs.'..i[#i]..'+'..tostring(step)..' <= '..tostring(maxi)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'+'..tostring(step)..'; prefs:save(); '..stead.deref(s)..'.extraction("'..i[#i]..'", prefs.'..i[#i]..'); return true; end');
 				else
-					plusc = ('prefs.'..i[#i]..'=prefs.'..i[#i]..'+'..tostring(step)..'; prefs:save(); return true');
+					plusc = ('prefs.'..i[#i]..'=prefs.'..i[#i]..'+'..tostring(step)..'; '..stead.deref(s)..'.extraction("'..i[#i]..'", prefs.'..i[#i]..'); prefs:save(); return true');
 				end;
 --				print(plusc);
-				local minusc = ('if prefs.'..i[#i]..'-'..tostring(step)..' >= '..tostring(mini)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'-'..tostring(step)..'; prefs:save(); return true end');
+				local minusc = ('if prefs.'..i[#i]..'-'..tostring(step)..' >= '..tostring(mini)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'-'..tostring(step)..'; prefs:save(); '..stead.deref(s)..'.extraction("'..i[#i]..'", prefs.'..i[#i]..'); return true end');
 --				print(minusc);
 				put (vobj (i[#i], code (c)));
 				put (xact(plus, code (plusc)));
@@ -274,10 +380,10 @@ settings = xenterroom {
 				put (vobj (i[4], code (c)));
 			end;
 		end;
-		put (vobj ('out', code [[return make_enter('jumpout')]]));
+		put (vobj ('roomout', code [[return make_enter('jumpout')]]));
 	end;
-	act = function (s, w)
-		s.switch (w)
+	act = function(s, w)
+		s.switch(s, w)
 		return true
 	end
 };

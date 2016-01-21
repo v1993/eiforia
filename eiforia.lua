@@ -1890,7 +1890,6 @@ eiforia = obj {
 		for_posev=0;
 		for_eat=0;
 		add_zerno=0;
-		urog=7;
 		fl_urog=0;
 		fl_r=0;
 		fl_kar={};

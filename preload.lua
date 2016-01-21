@@ -45,3 +45,46 @@ room = stead.inherit(room, function(v)
 	end)
 	return v;
 end)
+
+vobj = function(nam, dsc)
+	local v = obj
+	{
+		nam = nam;
+		dsc = dsc;
+		act = function(s) return stead.call(where(s), 'act', stead.nameof(s)) end;
+		save = function(self, name, h, need)
+			-- self - текущий объект
+			-- name -- полное имя переменной
+			-- h - файловый дескриптор файла сохранения
+			-- need - признак того, что это создание объекта, 
+			-- файл сохранения должен создать объект 
+			-- при загрузке
+			local dsc;
+			print(self.nam);
+			if stead.type(self.dsc) == 'string' then
+				dsc = self.dsc;
+			else
+				dsc = string.dump(self.dsc);
+			end;
+			print(dsc);
+			if need then 
+				-- в случае создания, запишем строку 
+				-- с вызовом конструктора
+				h:write(stead.string.format(
+				"%s  = vobj(%s, %s);\n",
+				name,
+				-- формирование строк
+				stead.tostring(self.nam),                                     
+				stead.tostring(dsc)));
+			end
+			stead.savemembers(h, self, name, true); -- сохраним все 
+			-- остальные переменные объекта
+			-- например, состояние включен/выключен
+			-- итд
+			-- false в последней позиции означает что будет 
+			-- передано в save-методы вложенных объектов в 
+			-- качестве параметра need
+			end;
+		};
+	return v;
+end;

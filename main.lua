@@ -257,18 +257,19 @@ settings = xenterroom {
 	{txtc(txtb('Основные настройки:')), 'text'}, 
 	{'Музыка', 'boolean', 'включена', 'выключена', 'music'}, 
 	{'Курсор в полях ввода', 'list', {{'on', 'включен'}, {'off', 'выключен'}, {'turning', 'мигает'}}, 'cursor'}, 
-	{'Курсор', 'list', {{'_', '_'}, {'[]', '[]'}, {"|", "|"}}, 'underline'}, 
+	{'Вид курсора', 'list', {{'_', '_'}, {'[]', '[]'}}, 'underline'}, 
 	{txtc(txtb('Настройки игры:')), 'text'}, 
 	{txtem('Внимание! Изменение данных параметров классифицируется как читерство и подлежит использованию в чисто экспериментальных целях! Для отката в исходное состояние используйте кнопку "Сброс игровых настроек"'), 'text'}, 
 	{'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}, 
 	{'Зерна в год, тонн на человека', 'number', 0, 0, 1, 'ed_eat'}, 
 	{function () if not isvanila() then pn '{resetgamevars_xact|Сброс игровых настроек}'; end; end, 'text'}, 
 	{txtc(txtb('Инструменты отладки:')), 'text'}, 
-	{txtem('Внимание! Включение опций из данного раздела может привести  к генерировнию БОЛЬШИХ объёмов данных. Не включайте эти опции, если не уверены в том, что вам это надо! ^РАБОТАЕТ -- НЕ ТРОГАЙ!!! ^Если же вы их включили и усомнились в том, что это надо, срочно нажимайте "Выключить отладку" и живите спокойно.'), 'text'}, 
+	{txtem('Внимание! Включение опций из данного раздела может привести  к генерировнию БОЛЬШИХ объёмов данных. Не включайте эти опции, если не уверены в том, что вам это надо! ^Работает -- не трогай! ^Если же вы их включили и усомнились в том, что это надо, срочно нажимайте "Выключить отладку" и живите спокойно.'), 'text'}, 
 	{'Печатать в консоль изменения настроек', 'boolean', 'да', 'нет', 'logsets'}, 
-	{'Отладочный вывод (ОЧЕНЬ ПОДРОБНЫЙ!!!) в консоль', 'boolean', 'включен', 'выключен', 'debugout'}, 
+	{'Отладочный вывод (очень подробный!!!) в консоль', 'boolean', 'включен', 'выключен', 'debugout'}, 
 	{function () if prefs.logsets or prefs.debugout then pn '{debugoff_xact|Выключить отладку}'; end; end, 'text'}
 	};
+	var {categories = {}};
 	menuroom = true;
 	extraction = function(nam, val)
 		if prefs.logsets then
@@ -332,17 +333,26 @@ settings = xenterroom {
 	end;
 	enter = function(s)
 		s.obj:zap();
+		s.categories = {};
 		local i;
 		local printnam = function(str)
 			return (stead.type(str) == 'function' and str or str..'^');
 		end;
 		for i in pairs(s.sets) do
 			i = s.sets[i];
-			if i[2] == 'text' then
+			if i[2] == 'category' then
+				local object = vobj(i[#i], i[1]);
+				table.insert(s.categories, {i[#i], object})
+				if #i > 3 then
+					put (object, #i-1)
+				else
+					put (object)
+				end;
+			elseif i[2] == 'text' then
 				put (vobj (i[2], printnam(i[1])))
 			elseif i[2] == 'boolean' then
-				local c = ('if prefs.'..i[5]..' then v="'..i[3]..'" else v="'..i[4]..'" end pn("'..i[1]..': {" .. v .. "}")');
-				put (vobj (i[5], code (c)))
+				local c = ('if prefs.'..i[#i]..' then v="'..i[3]..'" else v="'..i[4]..'" end pn("'..i[1]..': {" .. v .. "}")');
+				put (vobj (i[#i], code (c)))
 			elseif i[2] == 'number' then
 				local plus = (i[#i]..'plus');
 				local minus = (i[#i]..'minus');
@@ -367,17 +377,17 @@ settings = xenterroom {
 					local i, n;
 					for i in pairs(]]..stead.deref(s)..[[.sets) do
 						i = ]]..stead.deref(s)..[[.sets[i];
-						if i[2] == 'list' and i[4] == ']]..i[4]..[[' then
+						if i[2] == 'list' and i[#i] == ']]..i[#i]..[[' then
 							for n in pairs(i[3]) do
 								n = i[3][n];
-								if prefs.]]..i[4]..[[ == n[1] then
+								if prefs.]]..i[#i]..[[ == n[1] then
 									pn (']]..i[1]..[[: {'..n[2]..'}');
 								end;
 							end;
 						end;
 					end;]]
 				);
-				put (vobj (i[4], code (c)));
+				put (vobj (i[#i], code (c)));
 			end;
 		end;
 		put (vobj ('roomout', code [[return make_enter('jumpout')]]));

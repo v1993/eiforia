@@ -2,10 +2,15 @@
 stead.module_init(function()
 	stead.busy(true);
 	click_snd = sound.load('snd/click.ogg');
+	stead.busy();
 	turning_snd = sound.load('snd/turning.ogg');
+	stead.busy();
 	main_snd = sound.load('snd/main.ogg');
+	stead.busy();
 	game_snd = sound.load('snd/game.ogg');
+	stead.busy();
 	andale = font('fonts/Andale_Mono.ttf', 16);
+	stead.busy();
 	times = font('fonts/Times_New_Roman.ttf', 16);
 	stead.busy(false);
 	return true

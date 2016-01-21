@@ -254,23 +254,77 @@ settings = xenterroom {
 	nam = "Настройки игры";
 	press = function(s) click(); walkout(); end;
 	sets = {
-	{txtc(txtb('Основные настройки:')), 'text'}, 
-	{'Музыка', 'boolean', 'включена', 'выключена', 'music'}, 
-	{'Курсор в полях ввода', 'list', {{'on', 'включен'}, {'off', 'выключен'}, {'turning', 'мигает'}}, 'cursor'}, 
-	{'Вид курсора', 'list', {{'_', '_'}, {'[]', '[]'}}, 'underline'}, 
-	{txtc(txtb('Настройки игры:')), 'text'}, 
-	{txtem('Внимание! Изменение данных параметров классифицируется как читерство и подлежит использованию в чисто экспериментальных целях! Для отката в исходное состояние используйте кнопку "Сброс игровых настроек"'), 'text'}, 
-	{'Максимальное кол-во жён', 'number', 1, 5, 1, 'maxwife'}, 
-	{'Зерна в год, тонн на человека', 'number', 0, 0, 1, 'ed_eat'}, 
+	{txtc(txtb('Основные настройки:')), 'category', 'base'}, 
+	{'Музыка', 'boolean', 'включена', 'выключена', 'base','music'}, 
+	{'Курсор в полях ввода', 'list', {{'on', 'включен'}, {'off', 'выключен'}, {'turning', 'мигает'}}, 'base', 'cursor'}, 
+	{'Вид курсора', 'list', {{'_', '_'}, {'[]', '[]'}}, 'base', 'underline'}, 
+	{txtc(txtb('Настройки игры:')), 'category', 'game'}, 
+	{txtem('Внимание! Изменение данных параметров классифицируется как читерство и подлежит использованию в чисто экспериментальных целях! Для отката в исходное состояние используйте кнопку "Сброс игровых настроек"'), 'game', 'text'}, 
+	{'Максимальное кол-во жён', 'number', 1, 5, 1, 'game', 'maxwife'}, 
+	{'Зерна в год, тонн на человека', 'number', 0, 0, 1, 'game', 'ed_eat'}, 
 	{function () if not isvanila() then pn '{resetgamevars_xact|Сброс игровых настроек}'; end; end, 'text'}, 
-	{txtc(txtb('Инструменты отладки:')), 'text'}, 
-	{txtem('Внимание! Включение опций из данного раздела может привести  к генерировнию БОЛЬШИХ объёмов данных. Не включайте эти опции, если не уверены в том, что вам это надо! ^Работает -- не трогай! ^Если же вы их включили и усомнились в том, что это надо, срочно нажимайте "Выключить отладку" и живите спокойно.'), 'text'}, 
-	{'Печатать в консоль изменения настроек', 'boolean', 'да', 'нет', 'logsets'}, 
-	{'Отладочный вывод (очень подробный!!!) в консоль', 'boolean', 'включен', 'выключен', 'debugout'}, 
+	{txtc(txtb('Инструменты отладки:')), 'category', 'debug'}, 
+	{txtem('Внимание! Включение опций из данного раздела может привести  к генерировнию БОЛЬШИХ объёмов данных. Не включайте эти опции, если не уверены в том, что вам это надо! ^Работает -- не трогай! ^Если же вы их включили и усомнились в том, что это надо, срочно нажимайте "Выключить отладку" и живите спокойно.'), 'debug', 'text'}, 
+	{'Печатать в консоль изменения настроек', 'boolean', 'да', 'нет', 'debug', 'logsets'}, 
+	{'Отладочный вывод (очень подробный!!!) в консоль', 'boolean', 'включен', 'выключен', 'debug', 'debugout'}, 
 	{function () if prefs.logsets or prefs.debugout then pn '{debugoff_xact|Выключить отладку}'; end; end, 'text'}
 	};
-	var {categories = {}};
+	var { categories = {}; };
 	menuroom = true;
+	category = {
+		get_id = function(name)
+			local s = here();
+			for i in pairs(s.categories) do
+				i = s.categories[i];
+				if i[1] == name then
+					return (i[2]);
+				end;
+			end;
+		end;
+		get_num = function(name)
+			local s = here();
+			for i in pairs(s.categories) do
+				local n = s.categories[i];
+				if n[1] == name or n[2] == name then
+					return (i);
+				end;
+			end;
+		end;
+		insert_to = function(name, id)
+			local s = here();
+			place(id, s.category.get_id(name))
+		end;
+		add = function(nam, dsc, where)
+			local s = here();
+			local object = vobj(nam, dsc);
+			table.insert(s.categories, {nam, object, false});
+			put (object, where or here());
+			return object;
+		end;
+		on = function(nam)
+			local s = here();
+			nam = (stead.type(nam) ~= 'string' and nam or s.category.get_id(nam));
+			for k,v in opairs(nam.obj) do
+				v = ref(v)
+				v:enable();
+			end;
+			s.categories[s.category.get_num(nam)][3] = true;
+		end;
+		off = function(nam)
+			local s = here();
+			nam = (stead.type(nam) ~= 'string' and nam or s.category.get_id(nam));
+			for k,v in opairs(nam.obj) do
+				v = ref(v)
+				v:disable();
+			end;
+			s.categories[s.category.get_num(nam)][3] = false;
+		end;
+		turn = function(nam)
+			local s = here();
+			if s.categories[s.category.get_num(nam)][3] then s.category.off(nam) else s.category.on(nam) end;
+--			print (s.categories[s.category.get_num(nam)][3]);
+		end;
+	};
 	extraction = function(nam, val)
 		if prefs.logsets then
 			print(nam..' is '..tostring(val))
@@ -294,6 +348,7 @@ settings = xenterroom {
 		end;
 	end;
 	switch = function(s, nam)
+		print(nam);
 		if nam == 'roomout' then
 			walkout();
 			return;
@@ -301,7 +356,9 @@ settings = xenterroom {
 		local i, n, t;
 		for i in pairs(here().sets) do
 			i = here().sets[i];
-			if i[#i] == nam and i[2] == 'boolean' then
+			if i[#i] == nam and i[2] == 'category' then
+				s.category.turn(nam)
+			elseif i[#i] == nam and i[2] == 'boolean' then
 				local c = stead.eval('prefs.'..i[#i]..' = not prefs.'..i[#i]);
 				c();
 				prefs:save();
@@ -331,6 +388,14 @@ settings = xenterroom {
 		end;
 		s.extraction(nam, evalvar('prefs.'..nam));
 	end;
+	add = function(s, obj, conftable, deflong)
+		if #conftable > deflong then
+			put(obj, s.category.get_id(conftable[#conftable-1]));
+			obj:disable();
+		else
+			put(obj)
+		end;
+	end;
 	enter = function(s)
 		s.obj:zap();
 		s.categories = {};
@@ -341,18 +406,13 @@ settings = xenterroom {
 		for i in pairs(s.sets) do
 			i = s.sets[i];
 			if i[2] == 'category' then
-				local object = vobj(i[#i], i[1]);
-				table.insert(s.categories, {i[#i], object})
-				if #i > 3 then
-					put (object, #i-1)
-				else
-					put (object)
-				end;
-			elseif i[2] == 'text' then
-				put (vobj (i[2], printnam(i[1])))
+				local func = function(arg1) return (stead.type(arg1) == 'function' and arg1 or ('{'..arg1..'}^')); end;
+				s.category.add(i[#i], func(i[1]), #i > 3 and i[#i-1] or nil)
+			elseif i[2] == 'text' or i[3] == 'text' then
+				s:add (vobj (i[2], printnam(i[1])), i, 2)
 			elseif i[2] == 'boolean' then
 				local c = ('if prefs.'..i[#i]..' then v="'..i[3]..'" else v="'..i[4]..'" end pn("'..i[1]..': {" .. v .. "}")');
-				put (vobj (i[#i], code (c)))
+				s:add (vobj (i[#i], code (c)), i, 5)
 			elseif i[2] == 'number' then
 				local plus = (i[#i]..'plus');
 				local minus = (i[#i]..'minus');
@@ -369,9 +429,9 @@ settings = xenterroom {
 --				print(plusc);
 				local minusc = ('if prefs.'..i[#i]..'-'..tostring(step)..' >= '..tostring(mini)..' then prefs.'..i[#i]..'=prefs.'..i[#i]..'-'..tostring(step)..'; prefs:save(); '..stead.deref(s)..'.extraction("'..i[#i]..'", prefs.'..i[#i]..'); return true end');
 --				print(minusc);
-				put (vobj (i[#i], code (c)));
-				put (xact(plus, code (plusc)));
-				put (xact(minus, code (minusc)));
+				s:add (vobj (i[#i], code (c)), i, 6);
+				s:add (xact(plus, code (plusc)), i, 6);
+				s:add (xact(minus, code (minusc)), i, 6);
 			elseif i[2] == 'list' then
 				local c = ([[
 					local i, n;
@@ -387,13 +447,13 @@ settings = xenterroom {
 						end;
 					end;]]
 				);
-				put (vobj (i[#i], code (c)));
+				s:add (vobj (i[#i], code (c)), i, 4);
 			end;
 		end;
 		put (vobj ('roomout', code [[return make_enter('jumpout')]]));
 	end;
-	act = function(s, w)
-		s.switch(s, w)
+	act = function(s, w, w2)
+		s.switch(s, (w2 or w))
 		return true
 	end
 };

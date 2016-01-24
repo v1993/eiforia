@@ -4,7 +4,6 @@
 instead_version "2.1.0"
 game.forcedsc = true;
 stead.scene_delim = '^'
---require "dbg"
 require "prefs"
 require "para"
 require "dash"
@@ -86,12 +85,12 @@ function start()
 		prefs.lang = 'ru';
 	end;]]--
 	if prefs.music then
-		if here().menuroom and sound.playing(1) ~= main_snd then
+		if here().menuroom then
 			sound.stop(1);
-			sound.play(main_snd, 1)
-		elseif not here().menuroom and sound.playing(1) ~= game_snd then
+			sound.play(main_snd, 1, 0)
+		elseif not here().menuroom then
 			sound.stop(1);
-			sound.play(game_snd, 1)
+			sound.play(game_snd, 1, 0)
 		end;
 	end;
 end;
@@ -211,10 +210,10 @@ mplayer = obj {
 		if prefs.music then
 			if here().menuroom and sound.playing(1) ~= main_snd then
 				sound.stop(1);
-				sound.play(main_snd, 1)
+				sound.play(main_snd, 1, 0)
 			elseif not here().menuroom and sound.playing(1) ~= game_snd then
 				sound.stop(1);
-				sound.play(game_snd, 1)
+				sound.play(game_snd, 1, 0)
 			end;
 		end;
 	end;
@@ -348,7 +347,6 @@ settings = xenterroom {
 		end;
 	end;
 	switch = function(s, nam)
-		print(nam);
 		if nam == 'roomout' then
 			walkout();
 			return;

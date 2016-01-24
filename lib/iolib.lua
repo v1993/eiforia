@@ -318,7 +318,7 @@ checkinput = function(reaction, msg, comp, coff, nam)
 --		print (stead.type(s.comp));
 --		print (stead.type(comp));
 		if tonumber(text)*coff > tonumber(comp) then
-			s.msg = "Повторите ввод: ";
+--			s.msg = "Повторите ввод: ";
 			s.extradsc = "У вас столько нет.";
 			return true;
 		end;

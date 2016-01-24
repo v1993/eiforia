@@ -16,7 +16,7 @@ start_game = function()
 	return nextstep();
 end;
 
--- Сброс переменных
+-- MARKER: Сброс переменных
 
 vars_reset = function()
 	-- текущее состояние ресурсов
@@ -67,7 +67,7 @@ make_ochki = function(t)
 	end;
 end;
 
--- Спец. функция обработки шагов
+-- MARKER: Спец. функция обработки шагов
 
 nextstep = function()
 	local chtype = 0; retry = false;
@@ -205,7 +205,7 @@ function _nextstep()
   end
 end
 
--- Обработка года
+-- MARKER: Обработка года
 make_turn = function()
 	local a, b;
 	-- Урожай
@@ -289,7 +289,7 @@ make_turn = function()
 	return true;
 end;
 
--- люди склоняются
+-- MARKER: Склонения
 mannam = function(num)
 	return sklon(num, "человек", "человека");
 end
@@ -699,9 +699,10 @@ war1 = yesnoroom {
 		hook_all();
 		your_men_krest = 0;
 		your_men_extra = 0;
+		is_helper = false;
 		your_men_guard = cur_guard;
-		enemy_men_guard = round(rnd(cur_guard*2));
-		enemy_men_krest = round(rnd(cur_krest*2));
+		enemy_men_guard = round(rnd(cur_guard*2.5));
+		enemy_men_krest = round(rnd(cur_krest*2.5));
 		ras_guard = round(enemy_men_guard - (50 * enemy_men_guard / 100) + rnd(enemy_men_guard));
 		ras_krest = round(enemy_men_krest - (35 * enemy_men_krest / 100) + rnd(enemy_men_krest));
 	end;
@@ -792,7 +793,7 @@ war2 = war2const {
 		objs():add(warenter);
 		return true;
 	end;
-	no = code [[walk(war3);]];
+	no = code [[if rnd(100) < 80 then walk(war3) else walk(war4) end]];
 	exit = code [[unhook_all()]];
 };
 
@@ -801,7 +802,11 @@ warenter = checkinput(
 		cur_money = cur_money-(tonumber(text)*100);
 		your_men_extra = tonumber(text);
 		objs():del(s);
-		walk(war3);
+		if rnd(100) < 80 then
+			walk(war3)
+		else
+			walk(war4)
+		end
 	end,
 	function(s)
 		p ("Сколько наёмников хотите нанять (в казне - "..cur_money.." "..rubnam(cur_money).."):")
@@ -809,7 +814,37 @@ warenter = checkinput(
 	'cur_money', 100, "warenter"
 );
 
-war3 = enterroom {
+war3 = yesnoroom {
+	nam = "Война";
+	pic = "gfx/war.png";
+	enter = function(s)
+		hook_yesno();
+		helper_men_guard = round(rnd_gauss(cur_guard, cur_guard))
+		helper_men_krest = round(rnd_gauss(cur_krest, cur_krest))
+		if helper_men_guard == 0 and helper_men_krest == 0 then
+			walk(war4)
+		end;
+	end;
+	question = function(s) --MARKER:0
+		local krestnam = function(num)
+			return sklon4 (num, "крестьянина", "крестьян");
+		end
+		local sodnam = function(num)
+			return sklon4(num, "солдата", "солдат")
+		end
+		p ('Ваш сосед согласен помочь Вам. Он может предоставить Вам '..(helper_men_guard > 0 and (helper_men_guard..' '..sodnam(helper_men_guard)) or '')..(helper_men_guard > 0 and helper_men_krest > 0 and ' и ' or '')..(helper_men_krest > 0 and (helper_men_krest..' '..krestnam(helper_men_krest)) or '')..' при условии, что в случае победы Вы разделите с ним добычу поровну.^Вы согласны на такой договор?')
+	end;
+	yes = function(s)
+		is_helper = true;
+		your_men_guard=your_men_guard+helper_men_guard;
+		your_men_krest=your_men_krest+helper_men_krest;
+		walk (war4);
+	end;
+	no = code[[walk (war4)]];
+	exit = code[[unhook_yesno()]];
+};
+
+war4 = enterroom {
 	nam = "Война";
 	pic = "gfx/war.png";
 	enter = code [[hook_enter()]];
@@ -836,17 +871,29 @@ war3 = enterroom {
 		your_mark = round(your_men_guard*rndfr(7, 8, 5)+your_men_extra*rndfr(5, 8, 5)+your_men_krest*rndfr(2, 4, 5));
 		enemy_mark = round(enemy_men_guard*rndfr(7, 8, 5)+enemy_men_krest*rndfr(2, 4, 5));
 		n=rnd(enemy_mark+your_mark*2);
-		if (n<=your_mark*2) then
+		if (n<your_mark*2) then
 			victory=true;
 		end;
 		click();
 		if victory then
-			n=rnd(90)+10; ch_money=round(cur_money*n/100); cur_money=cur_money+ch_money;
-			n=rnd(90)+10; ch_gold=round(cur_gold*n/100); cur_gold=cur_gold+ch_gold;
-			n=rnd(90)+10; ch_land=round(cur_land*n/100); cur_land=cur_land+ch_land;
-			n=rnd(90)+10; ch_zerno=round(cur_zerno*n/100); cur_zerno=cur_zerno+ch_zerno;
-			n=rnd(90)+10; ch_krest=round(cur_krest*n/100); cur_krest=cur_krest+ch_krest;
+			n=rnd(90)+10; ch_money=round(cur_money*n/100);
+			n=rnd(90)+10; ch_gold=round(cur_gold*n/100);
+			n=rnd(90)+10; ch_land=round(cur_land*n/100);
+			n=rnd(90)+10; ch_zerno=round(cur_zerno*n/100);
+			n=rnd(90)+10; ch_krest=round(cur_krest*n/100);
 			walk(warvictory);
+			if is_helper then
+				ch_money = round(ch_money/2);
+				ch_gold = round(ch_gold/2);
+				ch_land = round(ch_land/2);
+				ch_zerno = round(ch_zerno/2);
+				ch_krest = round(ch_krest/2);
+			end;
+			cur_money=cur_money+ch_money;
+			cur_gold=cur_gold+ch_gold;
+			cur_land=cur_land+ch_land;
+			cur_zerno=cur_zerno+ch_zerno;
+			cur_krest=cur_krest+ch_krest;
 		else
 			n=rnd(90)+10; ch_money=round(cur_money*n/100); cur_money=cur_money-ch_money;
 			n=rnd(90)+10; ch_gold=round(cur_gold*n/100); cur_gold=cur_gold-ch_gold;
@@ -864,7 +911,11 @@ warvictory = xenterroom {
 	pic = "gfx/warvictory.png";
 	dsc = function(s)
 		p (andale:txt ("Вы победили!", 'green'));
-		p "Ваша армия захватила трофеи:";
+		pr "Ваша армия захватила трофеи";
+		if is_helper then
+			pr ' (после раздела с союзником)'
+		end;
+		p ':'
 		deftable(ch_money, ch_gold, ch_land, ch_zerno, ch_krest, nil, nil, nil, nil, false, false);
 --		p "^^";
 	end;
@@ -1928,6 +1979,7 @@ eiforia = obj {
 		--eats_need=0;
 		--eats_gave=0;
 		--eats_one_man=0;
+		
 		-- Доп. переменные, юзаются где попало
 		-- Война и не только
 		your_men_guard=0;
@@ -1935,6 +1987,9 @@ eiforia = obj {
 		your_men_extra=0;
 		enemy_men_guard=0;
 		enemy_men_krest=0;
+		helper_men_guard=0;
+		helper_men_krest=0;
+		is_helper=false;
 		ras_guard=0;
 		ras_krest=0;
 --		mobil=0;

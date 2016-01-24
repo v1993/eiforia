@@ -75,3 +75,10 @@ end
 function warnfnt(text)
     return pr (andale:txt (text, 'red', 1));
 end
+
+rnd_gauss = function(num, range)
+	for n = 1, range do
+		num = (rnd(2) == 1 and num+1 or num-1)
+	end;
+	return num;
+end;

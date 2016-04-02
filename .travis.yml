@@ -1,0 +1,23 @@
+language: c
+cache: ccache
+
+sudo: false
+
+env:
+  matrix:
+    - LUA=lua5.1
+    - LUA=lua5.2
+    - LUA=lua5.3
+
+
+
+install: source .travis/setenv_lua.sh
+
+script:
+  - ./checklua.sh
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
+  irc: "chat.freenode.net#vyo-build"

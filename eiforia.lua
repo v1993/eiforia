@@ -1498,7 +1498,7 @@ choicezerno2 = room {
 		end;
 		if s.state < 2 then
 			pn "Напоминаю, Ваше состояние сейчас составляет:";
-			pn ("Земля - "..cur_land.." га, крестьяне - "..cur_krest.." "..sklon2(cur_krest, "душа", "души", "душ")..", гвардия - "..cur_guard.." "..mannam(cur_guard).." чел.");
+			pn ("Земля - "..cur_land.." га, крестьяне - "..cur_krest.." "..sklon2(cur_krest, "душа", "души", "душ")..", гвардия - "..cur_guard.." "..mannam(cur_guard)..".");
 			pn ("Запас зерна в амбарах - "..cur_zerno.." "..sklon2(cur_zerno, "тонна", "тонны", "тонн")..".");
 			p ("В идеале: на еду -- "..(cur_krest+cur_guard)*prefs.ed_eat.." "..sklon2((cur_krest+cur_guard)*prefs.ed_eat, "тонна", "тонны", "тонн")..", на посев -- "..math.min(cur_land,cur_krest)*ed_posev.." "..sklon2(math.min(cur_land,cur_krest)*ed_posev, "тонна", "тонны", "тонн")..".");
 		end;
